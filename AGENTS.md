@@ -49,6 +49,9 @@ Guidelines for coding agents
   - Use functions defined in `utils/` whenever possible. Avoid writing redundant code.
 - When planning (e.g., in Plan Mode), always plan out tests for new functionality. Think carefully about how to test functions and don't just write trivial tests (e.g., don't just check that a file is nonempty). Then write these test files and run them before and after each session, addressing issues as they come up.
 - always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>`
+
+## Version Control
+- Create a new git branch for a new plan/feature
 - When a plan is accepted, commit after each TODO completion/step
 
 ## Testing

@@ -1,20 +1,60 @@
-# Plan: Planning Mode Session Logger
+# Plan: Planning Mode Session Logger (Plugin)
 
 ## Goal
-Create a portable script that automatically saves planning mode logs (full transcripts + plan files) to an `agent_logs/` directory when Claude Code planning sessions end.
+Create a Claude Code plugin that automatically saves session transcripts and plan files to `agent_logs/`.
 
-## Solution: Claude Code Hooks
+## Solution: Claude Code Plugin
 
-Use Claude Code's native `SessionEnd` hook to automatically capture and save planning session data.
+A plugin that uses the `SessionEnd` hook to automatically capture and save session data.
 
-## Naming Convention (per AGENTS.md)
+## Installation & Usage
 
-- **Plans**: `YYYY-MM-DD-<plan-name>.md`
-- **Transcripts**: `YYYY-MM-DD-<plan-name>.transcript.txt`
+```bash
+# Install the plugin (one-time setup)
+claude plugin install /path/to/agents-toolkit/session-logger-plugin
 
-## Files Created
+# That's it! Now all sessions are automatically logged.
+# Just use claude normally:
+claude
+claude --plan
+claude -c  # continue session
 
-### 1. `.claude/settings.json` - Hook Configuration
+# Transcripts saved to ./agent_logs/transcripts/
+# Plans saved to ./agent_logs/plans/
+```
+
+To disable logging temporarily:
+```bash
+claude plugin disable session-logger
+```
+
+To re-enable:
+```bash
+claude plugin enable session-logger
+```
+
+## Plugin Structure
+
+```
+session-logger-plugin/
+├── manifest.json              # Plugin metadata & config
+├── hooks/
+│   └── hooks.json             # SessionEnd hook definition
+└── scripts/
+    └── save-session.sh        # Transcript processing script
+```
+
+### manifest.json
+```json
+{
+  "name": "session-logger",
+  "version": "1.0.0",
+  "description": "Automatically saves session transcripts and plans to agent_logs/",
+  "author": "agents-toolkit"
+}
+```
+
+### hooks/hooks.json
 ```json
 {
   "hooks": {
@@ -23,7 +63,7 @@ Use Claude Code's native `SessionEnd` hook to automatically capture and save pla
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/save-planning-logs.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/save-session.sh"
           }
         ]
       }
@@ -32,71 +72,47 @@ Use Claude Code's native `SessionEnd` hook to automatically capture and save pla
 }
 ```
 
-### 2. `.claude/hooks/save-planning-logs.sh` - Main Logger Script
+### scripts/save-session.sh
+Receives JSON via stdin with:
+- `session_id`
+- `transcript_path`
+- `cwd` (current working directory)
 
-Responsibilities:
-- Read session info from stdin (JSON with `session_id`, `transcript_path`)
-- Check if session was a planning session (by examining transcript for plan mode indicators)
-- Convert JSONL transcript to readable text format
-- Copy transcript to `agent_logs/transcripts/` as `.transcript.txt`
-- Copy plan files to `agent_logs/plans/` with date prefix
-- Use portable JSON parsing (jq with Python fallback)
+Script will:
+1. Read transcript from `transcript_path`
+2. Clean it (remove ANSI codes, deduplicate lines)
+3. Save to `$cwd/agent_logs/transcripts/YYYY-MM-DD-<session-id>.transcript.txt`
+4. Copy recent plan files to `$cwd/agent_logs/plans/`
 
-### 3. `agent_logs/` Directory Structure
+## Naming Convention (per AGENTS.md)
+
+- **Transcripts**: `YYYY-MM-DD-<session-id>.transcript.txt`
+- **Plans**: `YYYY-MM-DD-<plan-name>.md`
+
+## Directory Structure (created in each project)
+
 ```
 agent_logs/
-├── transcripts/     # Session transcripts as readable .txt files
+├── transcripts/     # Session transcripts as cleaned .txt files
 ├── plans/           # Plan .md files
-└── planning-session-logger-plan.md
+└── LOG.md           # Session summaries (manual)
 ```
 
-### 4. `.gitignore` Updates
-Added patterns to optionally exclude logs from version control:
+## Copying to New Projects
+
+The plugin saves logs to the current working directory's `agent_logs/` folder. Just create the directory structure in any project:
+
+```bash
+mkdir -p agent_logs/{transcripts,plans}
 ```
-# Planning/Agent Logs (uncomment to exclude from version control)
-# agent_logs/transcripts/
-# agent_logs/plans/
-```
 
-## How to Copy to New Projects
-
-To add the planning session logger to another project:
-
-1. **Copy the hook script and settings:**
-   ```bash
-   # From the agents-toolkit directory
-   cp -r .claude/hooks /path/to/your/project/.claude/
-   cp .claude/settings.json /path/to/your/project/.claude/
-   ```
-
-2. **Create the logs directory:**
-   ```bash
-   mkdir -p /path/to/your/project/agent_logs/{transcripts,plans}
-   touch /path/to/your/project/agent_logs/transcripts/.gitkeep
-   touch /path/to/your/project/agent_logs/plans/.gitkeep
-   ```
-
-3. **Make the script executable:**
-   ```bash
-   chmod +x /path/to/your/project/.claude/hooks/save-planning-logs.sh
-   ```
-
-4. **Optionally update `.gitignore`:**
-   ```bash
-   cat >> /path/to/your/project/.gitignore << 'EOF'
-
-   # Planning/Agent Logs (uncomment to exclude from version control)
-   # agent_logs/transcripts/
-   # agent_logs/plans/
-   EOF
-   ```
+The plugin handles the rest automatically.
 
 ## Verification
 
-1. Ensure script is executable: `chmod +x .claude/hooks/save-planning-logs.sh`
-2. Start a Claude Code planning session (`/plan` command)
-3. Exit the session
-4. Check `agent_logs/` for:
-   - Transcript file in `transcripts/` named `YYYY-MM-DD-<plan-name>.transcript.txt`
-   - Plan file in `plans/` named `YYYY-MM-DD-<plan-name>.md`
-5. Verify transcript is readable text (not raw JSONL)
+1. Install: `claude plugin install ./session-logger-plugin`
+2. Verify: `claude plugin list` shows session-logger enabled
+3. Start a session: `claude`
+4. Have a brief conversation, then exit
+5. Check `agent_logs/transcripts/` for the transcript file
+6. Verify transcript is clean (readable text, no ANSI codes)

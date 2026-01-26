@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Planning/Agent Logs (uncomment to exclude from version control)
+# agent_logs/transcripts/
+# agent_logs/plans/

@@ -7,26 +7,11 @@ Create a self-contained planning session logger that can be copied to any projec
 
 ## Files to Create/Modify
 
-### 1. `.claude/settings.local.json` (modify)
-Set `plansDirectory` so plans write directly to project:
+### 1. `.claude/settings.json` (modify)
+Add `plansDirectory` and hook configuration:
 ```json
 {
-  "plansDirectory": "./agent_logs/plans"
-}
-```
-This means plans are already in the right folder with Claude's random names (e.g., `curious-twirling-cocoa.md`).
-
-### 2. `.claude/hooks/save-planning-logs.sh` (create)
-Bash script with embedded Python:
-- Triggered by `PostToolUse` hook on `ExitPlanMode`
-- Renames plan file from random name → `YYYY-MM-DD-<heading-name>.md`
-- Cleans JSONL transcript to readable text → `agent_logs/transcripts/`
-- Auto-commits both files with message: `chore: save planning session - <plan-name>`
-
-### 3. `.claude/settings.json` (modify)
-Add hook configuration:
-```json
-{
+  "plansDirectory": "./agent_logs/plans",
   "hooks": {
     "PostToolUse": [
       {
@@ -42,6 +27,14 @@ Add hook configuration:
   }
 }
 ```
+Plans are written directly to `agent_logs/plans/` with Claude's random names (e.g., `curious-twirling-cocoa.md`).
+
+### 2. `.claude/hooks/save-planning-logs.sh` (create)
+Bash script with embedded Python:
+- Triggered by `PostToolUse` hook on `ExitPlanMode`
+- Renames plan file from random name → `YYYY-MM-DD-<heading-name>.md`
+- Cleans JSONL transcript to readable text → `agent_logs/transcripts/`
+- Auto-commits both files with message: `chore: save planning session - <plan-name>`
 
 ### 4. `agent_logs/` structure (ensure exists)
 ```

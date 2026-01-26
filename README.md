@@ -13,43 +13,21 @@ Repo for various coding agents scripts, guidelines, and tools. To copy into/reus
 
 ## Planning Session Logger
 
-Automatically saves Claude Code session transcripts and plan files to `agent_logs/`.
+Automatically saves Claude Code planning session transcripts and plan files to `agent_logs/` using Claude Code's native hooks.
 
-### Setup
+### How It Works
 
-Add this line to your `~/.bashrc` or `~/.zshrc`:
-
-```bash
-source /path/to/project/.claude/hooks/claude-logging.sh
-```
-
-Then reload your shell or run `source ~/.bashrc`.
-
-### Usage
-
-```bash
-# Start a logged session with a name
-claude --log my-feature
-
-# Short form
-claude -l my-feature
-
-# With additional claude args
-claude --log my-feature --plan
-
-# Auto-generate session name
-claude --log
-
-# Normal (unlogged) session
-claude
-```
-
-### What It Does
-
-1. Records the entire terminal session using `script` command
-2. Cleans the transcript (removes ANSI codes, deduplicates lines)
-3. Copies any plan files created during the session
-4. Saves everything with proper naming conventions
+1. When you exit plan mode (`ExitPlanMode`), the hook triggers
+2. The hook script finds the plan file using (in order):
+   - Hook input fields (most reliable)
+   - Searching the transcript for `.claude/plans/*.md` paths (session-specific)
+   - Recently modified files (30 min window, fallback)
+3. Extracts the plan name from the plan file's first `#` heading
+4. Converts the JSONL transcript to clean readable text
+5. Saves transcript as `YYYY-MM-DD-<plan-name>.transcript.txt`
+6. Saves plan as `YYYY-MM-DD-<plan-name>.md`
+7. Git commits the saved files
+8. If you re-enter plan mode and exit again, the same files are updated and committed
 
 ### Naming Convention
 
@@ -61,25 +39,27 @@ Per AGENTS.md:
 
 ```
 agent_logs/
-├── transcripts/     # Session transcripts as cleaned .txt files
-├── plans/           # Plan .md files
+├── transcripts/     # YYYY-MM-DD-<plan-name>.transcript.txt
+├── plans/           # YYYY-MM-DD-<plan-name>.md
 └── LOG.md           # Session summaries (reverse chronological)
 ```
 
-### Copying to New Projects
+### Setup
+
+The hook is configured in `.claude/settings.json`. No additional setup required for this project.
+
+To enable in other projects:
 
 ```bash
-# 1. Copy hooks directory
+# 1. Copy the hooks directory and settings
 cp -r .claude/hooks /path/to/your/project/.claude/
+cp .claude/settings.json /path/to/your/project/.claude/
 
-# 2. Create logs directory
+# 2. Create the logs directory structure
 mkdir -p /path/to/your/project/agent_logs/{transcripts,plans}
 touch /path/to/your/project/agent_logs/{transcripts,plans}/.gitkeep
 
-# 3. Update your shell config to source the logging script
-echo 'source /path/to/your/project/.claude/hooks/claude-logging.sh' >> ~/.bashrc
-
-# 4. (Optional) Update .gitignore
+# 3. (Optional) Update .gitignore
 cat >> /path/to/your/project/.gitignore << 'EOF'
 
 # Planning/Agent Logs (uncomment to exclude from version control)
@@ -90,6 +70,15 @@ EOF
 
 ### Configuration
 
-- **CLAUDE_LOGS_DIR**: Set this env var to change the logs directory (default: `./agent_logs`)
+- **AGENT_LOGS_DIR**: Set this env var to change the logs directory (default: `$CLAUDE_PROJECT_DIR/agent_logs`)
 - **Exclude from Git**: Uncomment the patterns in `.gitignore`
-- **Retention**: Manually delete old logs from `agent_logs/` as needed
+
+### Requirements
+
+- Claude Code with hooks support
+- `python3` for transcript cleaning and JSON parsing (jq used as fallback for JSON)
+
+### Files
+
+- `.claude/settings.json` - Hook configuration (triggers on `ExitPlanMode`)
+- `.claude/hooks/save-planning-logs.sh` - Main hook script

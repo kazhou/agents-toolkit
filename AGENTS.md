@@ -71,6 +71,7 @@ Guidelines for coding agents
 # Logging
 - always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`
   - transcripts of the terminal/chat between the user and agent should also be saved as text files to `agent_logs/transcripts`, with the same naming convention `YYYY-MM-DD-<plan name>.transcript.txt`
+  - these should be committed upon exiting Plan Mode, and will be modified upon re-entering Plan Mode in the same session
 - save a summary of the implementation done in the session in `agent_logs/LOG.md`, in reverse chronological order. That is, most recent updates are prepended to the start of the log file.
   - In this file, write down session summaries, what we tried and learned, etc., and implementation details/summary
   - These session summaries should be concise

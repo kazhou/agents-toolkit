@@ -41,14 +41,14 @@ Guidelines for coding agents
     - Clean, reproducible research setup
   
 ## Planning
-- Always start a project in Plan Mode. Ask the user for clarification.
+- Always start a project in Plan Mode. Ask the user for clarification. When in doubt, ask the user.
 - Always search the web for real API documentation. No need to ask for permission to search the web.
 - Always re-read the codebase before suggesting changes to work on the most up-to-date files. The user may have manually updated code without notifying you.
 - Make sure you understand the structure of datasets before writing code for them
 - Refactor common code and create data structures to keep code modular and clean. Define these files in `utils/` in the project.
   - Use functions defined in `utils/` whenever possible. Avoid writing redundant code.
 - When planning (e.g., in Plan Mode), always plan out tests for new functionality. Think carefully about how to test functions and don't just write trivial tests (e.g., don't just check that a file is nonempty). Then write these test files and run them before and after each session, addressing issues as they come up.
-- always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>`
+- always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`
 
 ## Version Control
 - Create a new git branch for a new plan/feature
@@ -69,9 +69,8 @@ Guidelines for coding agents
 
 
 # Logging
-- always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`
+- always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`. 
   - transcripts of the terminal/chat between the user and agent should also be saved as text files to `agent_logs/transcripts`, with the same naming convention `YYYY-MM-DD-<plan name>.transcript.txt`
-  - these should be committed upon exiting Plan Mode, and will be modified upon re-entering Plan Mode in the same session
 - save a summary of the implementation done in the session in `agent_logs/LOG.md`, in reverse chronological order. That is, most recent updates are prepended to the start of the log file.
   - In this file, write down session summaries, what we tried and learned, etc., and implementation details/summary
   - These session summaries should be concise

@@ -111,3 +111,18 @@ Assistant: [Tool: Edit]
 Assistant: [Tool: Edit]
 Assistant: Now let me verify the fix works:
 Assistant: [Tool: Bash]
+Assistant: Fixed. The script now falls back to `pwd` when `CLAUDE_PROJECT_DIR` isn't set.
+
+**Summary of changes:**
+
+1. Removed `-u` from `set -euo pipefail` → `set -eo pipefail` (allows fallback for unset variables)
+2. Added: `PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"`
+3. Added documentation about the concurrency limitation
+
+**Regarding the concurrency issue:** The timestamp-based fallback (Method 2) is inherently unreliable for concurrent sessions. The proper fix would be for Claude Code to pass the plan file path in the hook's `tool_input` (Method 1 already handles this if the data is present). You might want to check what data `ExitPlanMode` actually passes to hooks - if it includes the plan path, Method 1 would work reliably. If not, that might be a feature request for Claude Code.
+User: can we add some kind output to see which method the hook uses to find the plan
+Assistant: [Tool: Edit]
+Assistant: [Tool: Edit]
+Assistant: Let me also log the raw tool_input so we can see exactly what Claude Code passes:
+Assistant: [Tool: Edit]
+Assistant: [Tool: Bash]

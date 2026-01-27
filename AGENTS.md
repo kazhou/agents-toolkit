@@ -48,7 +48,6 @@ Guidelines for coding agents
 - Refactor common code and create data structures to keep code modular and clean. Define these files in `utils/` in the project.
   - Use functions defined in `utils/` whenever possible. Avoid writing redundant code.
 - When planning (e.g., in Plan Mode), always plan out tests for new functionality. Think carefully about how to test functions and don't just write trivial tests (e.g., don't just check that a file is nonempty) or mock functions. Then write these test files and run them before and after each session, addressing issues as they come up (see ##Testing for Test-Driven Development)
-- always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`
 
 ## Version Control
 - Create a new git branch for a new plan/feature

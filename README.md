@@ -85,7 +85,7 @@ agent_logs/
 4. Hook cleans the JSONL transcript to readable text
 5. Both files are auto-committed to git
 
-#### Cursor
+#### Cursor (not tested yet)
 1. Cursor creates plans in `~/.cursor/plans/` (global) or `.cursor/plans/` (workspace)
 2. Hooks trigger on:
    - `afterFileEdit` - when plan is saved to workspace (`.cursor/plans/`)

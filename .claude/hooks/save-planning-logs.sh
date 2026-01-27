@@ -10,10 +10,12 @@
 # Portable: uses $CLAUDE_PROJECT_DIR for all paths
 #
 
-set -euo pipefail
+set -eo pipefail
 
 # Configuration
-AGENT_LOGS_DIR="${CLAUDE_PROJECT_DIR}/agent_logs"
+# Use CLAUDE_PROJECT_DIR if set, otherwise fall back to current working directory
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+AGENT_LOGS_DIR="${PROJECT_DIR}/agent_logs"
 PLANS_DIR="$AGENT_LOGS_DIR/plans"
 TRANSCRIPTS_DIR="$AGENT_LOGS_DIR/transcripts"
 
@@ -31,7 +33,7 @@ export HOOK_INPUT="$INPUT"
 export HOOK_PLANS_DIR="$PLANS_DIR"
 export HOOK_TRANSCRIPTS_DIR="$TRANSCRIPTS_DIR"
 export HOOK_DATE_PREFIX="$DATE_PREFIX"
-export HOOK_PROJECT_DIR="$CLAUDE_PROJECT_DIR"
+export HOOK_PROJECT_DIR="$PROJECT_DIR"
 
 # Python script for all processing
 python3 << 'PYEOF'
@@ -69,18 +71,25 @@ def extract_plan_name(plan_path):
     return Path(plan_path).stem
 
 def find_plan_file(plans_dir, tool_input):
-    """Find the plan file that was just written."""
+    """Find the plan file that was just written.
+
+    NOTE: Method 2 (timestamp-based) will fail with concurrent Claude sessions
+    since it picks the most recently modified file. Ideally Claude Code should
+    pass the plan path in tool_input for reliable matching.
+    """
     plans_dir = Path(plans_dir)
 
-    # Method 1: From tool input (if available)
+    # Method 1: From tool input (preferred - session-specific)
     if tool_input:
         for key in ['plan_path', 'planPath', 'file_path', 'filePath', 'file']:
             if key in tool_input:
                 path = tool_input[key]
                 if path and Path(path).exists():
+                    print(f"[find_plan_file] Method 1: Found plan from tool_input['{key}']: {path}")
                     return path
+        print(f"[find_plan_file] Method 1: No valid path in tool_input. Keys present: {list(tool_input.keys())}")
 
-    # Method 2: Search CC's default plans directory (~/.claude/plans)
+    # Method 2: Fallback - search by recent modification time (not concurrent-safe)
     import time
     cc_plans_dir = Path.home() / '.claude' / 'plans'
     search_dirs = [cc_plans_dir, plans_dir]
@@ -102,8 +111,11 @@ def find_plan_file(plans_dir, tool_input):
 
     if recent_plans:
         recent_plans.sort(key=lambda x: x[1], reverse=True)
-        return str(recent_plans[0][0])
+        selected = str(recent_plans[0][0])
+        print(f"[find_plan_file] Method 2: Found {len(recent_plans)} recent plan(s), selected: {selected}")
+        return selected
 
+    print("[find_plan_file] Method 2: No recent plans found")
     return None
 
 def find_transcript():
@@ -229,8 +241,9 @@ def main():
     try:
         data = json.loads(input_json)
         tool_input = data.get('tool_input', {})
-    except:
-        pass
+        print(f"[hook] Received tool_input: {json.dumps(tool_input, indent=2)}")
+    except Exception as e:
+        print(f"[hook] Failed to parse input: {e}")
 
     # Find plan file
     plan_file = find_plan_file(plans_dir, tool_input)
@@ -248,24 +261,23 @@ def main():
     new_plan_path = Path(plans_dir) / f"{base_name}.md"
     transcript_path = Path(transcripts_dir) / f"{base_name}.transcript.txt"
 
-    files_to_commit = []
+    plan_saved = False
 
     # Copy plan file (keep original for CC to edit on re-entry)
     if plan_file != str(new_plan_path):
         shutil.copy2(plan_file, new_plan_path)
         print(f"Copied plan to: {new_plan_path}")
-        files_to_commit.append(str(new_plan_path))
+        plan_saved = True
 
-    # Find and clean transcript
+    # Find and clean transcript (saved locally, not committed)
     src_transcript = find_transcript()
     if src_transcript and clean_transcript(src_transcript, transcript_path):
-        print(f"Saved transcript: {transcript_path}")
-        files_to_commit.append(str(transcript_path))
+        print(f"Saved transcript (local only): {transcript_path}")
 
-    # Auto-commit
-    if files_to_commit:
-        if git_commit(project_dir, files_to_commit, f"chore: save planning session - {AGENT_NAME}-{plan_name}"):
-            print(f"Committed planning session files")
+    # Auto-commit plan only (transcripts are gitignored)
+    if plan_saved:
+        if git_commit(project_dir, [str(new_plan_path)], f"chore: save plan - {AGENT_NAME}-{plan_name}"):
+            print(f"Committed plan file")
 
 if __name__ == '__main__':
     main()

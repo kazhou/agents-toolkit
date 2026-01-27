@@ -2,7 +2,7 @@
 
 Repo for various coding agents scripts, guidelines, and tools. To copy into/reuse in projects.
 
-## Contents
+# Contents
 
 - [AGENTS.md](AGENTS.md): guidelines/preferences for agents. Agent-agnostic (e.g., can be used w/ Claude Code, Cursor, etc.) with allowance for further user modification
   - for Claude Code: `cp AGENTS.md ~/.claude/CLAUDE.md` (for global) or `cp AGENTS.md ./CLAUDE.md` (for project)
@@ -60,3 +60,28 @@ agent_logs/
 6. Re-entering plan mode finds and edits the original file
 7. Exiting again updates the archived copy
 
+
+---
+
+# Agent-specific Resources
+
+## Claude Code
+- [How Anthropic Uses Claude Code](https://www-cdn.anthropic.com/58284b19e702b49db9302d5b6f135ad8871e7658.pdf)
+  - Always save checkpoints (start in clean git state, commit changes, revert if necessary)
+  - Starting over often has a higher success rate than trying to fix Claude's mistakes
+- UI design plugin: https://github.com/Dammyjay93/interface-design
+
+## Cursor
+- [Cursor agents best practices](https://cursor.com/blog/agent-best-practices)
+  - Start with plans
+  - Sometimes the agent builds something that doesn't match what you wanted. Instead of trying to fix it through follow-up prompts, go back to the plan.
+  - Let the agent find context
+  - Long conversations can cause the agent to lose focus. After many turns and summarizations, the context accumulates noise and the agent can get distracted or switch to unrelated tasks. If you notice the effectiveness of the agent decreasing, it's time to start a new conversation.
+  - When you start a new conversation, use @Past Chats to reference previous work rather than copy-pasting the whole conversation.
+  - Create rules as markdown files in `.cursor/rules/`
+    - Keep rules focused on the essentials: the commands to run, the patterns to follow, and pointers to canonical examples in your codebase. Reference files instead of copying their contents; this keeps rules short and prevents them from becoming stale as code changes.
+  - Skills are defined in SKILL.md files and can include:
+    - Custom commands: Reusable workflows triggered with / in the agent input
+    - Hooks: Scripts that run before or after agent actions
+    - Domain knowledge: Instructions for specific tasks the agent can pull in on demand
+  - The agent can process images directly from your prompts. Paste screenshots, drag in design files, or reference image paths.

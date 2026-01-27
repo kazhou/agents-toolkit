@@ -47,7 +47,7 @@ Guidelines for coding agents
 - Make sure you understand the structure of datasets before writing code for them
 - Refactor common code and create data structures to keep code modular and clean. Define these files in `utils/` in the project.
   - Use functions defined in `utils/` whenever possible. Avoid writing redundant code.
-- When planning (e.g., in Plan Mode), always plan out tests for new functionality. Think carefully about how to test functions and don't just write trivial tests (e.g., don't just check that a file is nonempty). Then write these test files and run them before and after each session, addressing issues as they come up.
+- When planning (e.g., in Plan Mode), always plan out tests for new functionality. Think carefully about how to test functions and don't just write trivial tests (e.g., don't just check that a file is nonempty) or mock functions. Then write these test files and run them before and after each session, addressing issues as they come up (see ##Testing for Test-Driven Development)
 - always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`
 
 ## Version Control
@@ -57,7 +57,11 @@ Guidelines for coding agents
 ## Testing
 - Create tests in `tests/` in the project. 
 - Add a `tests/README.md` to document tests. Add a link to this doc in the main README
-- Ideally implement tests for functions before writing the functions themselves. Define example inputs and outputs. Feel free to create test input files in `tests/` if needed
+- Do Test-Driven Development whenever possible, i.e., implement tests for functions before writing the functions themselves. Define example inputs and outputs. Feel free to create test input files in `tests/` if needed
+  - Do NOT create mock implementations for functionality that doesn't exist yet. Run the tests and confirm they fail. Do not to write implementation code at this stage.
+  - Commit the tests when you're satisfied with them.
+  - After that, you may begin implementation to write code that passes the tests. Do not to modify the tests. Keep iterating until all tests pass.
+
 
 
 # Documentation
@@ -69,8 +73,6 @@ Guidelines for coding agents
 
 
 # Logging
-- always save planning mode plans to `agent_logs/plans` as markdown files. Name them `YYYY-MM-DD-<plan name>.md`. 
-  - transcripts of the terminal/chat between the user and agent should also be saved as text files to `agent_logs/transcripts`, with the same naming convention `YYYY-MM-DD-<plan name>.transcript.txt`
 - save a summary of the implementation done in the session in `agent_logs/LOG.md`, in reverse chronological order. That is, most recent updates are prepended to the start of the log file.
   - In this file, write down session summaries, what we tried and learned, etc., and implementation details/summary
   - These session summaries should be concise

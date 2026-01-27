@@ -1,16 +1,5 @@
 {
   "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/init-agent-logs.sh"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "ExitPlanMode",

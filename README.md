@@ -2,6 +2,8 @@
 
 Repo for various coding agents scripts, guidelines, and tools. To copy into/reuse in projects.
 
+This is a work in progress!
+
 # Contents
 
 - [AGENTS.md](AGENTS.md): guidelines/preferences for agents. Agent-agnostic (e.g., can be used w/ Claude Code, Cursor, etc.) with allowance for further user modification
@@ -46,9 +48,9 @@ cp -r .cursor/ /path/to/new-project/
 
 # Create agent_logs structure
 mkdir -p /path/to/new-project/agent_logs/{plans,transcripts}
-touch /path/to/new-project/agent_logs/plans/.gitkeep
 
-# Add agent_logs/transcripts to .gitignore
+# Add transcripts to .gitignore (may contain sensitive info)
+echo "agent_logs/transcripts/" >> /path/to/new-project/.gitignore
 ```
 
 ### Directory Structure
@@ -71,9 +73,8 @@ touch /path/to/new-project/agent_logs/plans/.gitkeep
 
 # Shared output
 agent_logs/
-├── plans/           # YYYY-MM-DD-<agent>-<plan-name>.md (archived copies)
-├── transcripts/     # YYYY-MM-DD-<agent>-<plan-name>.transcript.txt
-└── LOG.md           # Session summaries (reverse chronological)
+├── plans/           # YYYY-MM-DD-<agent>-<plan-name>.md (tracked in git)
+└── transcripts/     # YYYY-MM-DD-<agent>-<plan-name>.transcript.txt (gitignored)
 ```
 
 ### How It Works

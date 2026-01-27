@@ -52,6 +52,7 @@ Guidelines for coding agents
 ## Version Control
 - Create a new git branch for a new plan/feature
 - When a plan is accepted, commit after each TODO completion/step
+- Commit as you go! Commit frequently.
 
 ## Testing
 - Create tests in `tests/` in the project. 

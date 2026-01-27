@@ -70,13 +70,43 @@ def extract_plan_name(plan_path):
     # Fallback to filename (without .md)
     return Path(plan_path).stem
 
-def find_plan_file(plans_dir, tool_input):
-    """Find the plan file that was just written.
+def find_plan_from_transcript(transcript_path):
+    """Parse transcript to find plan file that was written in this session."""
+    if not transcript_path or not Path(transcript_path).exists():
+        return None
 
-    NOTE: Method 2 (timestamp-based) will fail with concurrent Claude sessions
-    since it picks the most recently modified file. Ideally Claude Code should
-    pass the plan path in tool_input for reliable matching.
-    """
+    plans_dir = Path.home() / '.claude' / 'plans'
+    plan_files = []
+
+    for line in Path(transcript_path).read_text(errors='replace').splitlines():
+        if not line.strip():
+            continue
+        try:
+            data = json.loads(line)
+            msg = data.get('message', {})
+            content = msg.get('content', [])
+
+            if isinstance(content, list):
+                for block in content:
+                    if isinstance(block, dict) and block.get('type') == 'tool_use':
+                        tool_name = block.get('name', '')
+                        tool_input = block.get('input', {})
+
+                        # Look for Write/Edit to ~/.claude/plans/
+                        if tool_name in ('Write', 'Edit'):
+                            file_path = tool_input.get('file_path', '')
+                            if file_path and str(plans_dir) in file_path and file_path.endswith('.md'):
+                                plan_files.append(file_path)
+        except:
+            pass
+
+    if plan_files:
+        # Return the last plan file written (most recent in transcript)
+        return plan_files[-1]
+    return None
+
+def find_plan_file(plans_dir, tool_input, transcript_path=None):
+    """Find the plan file that was just written."""
     plans_dir = Path(plans_dir)
 
     # Method 1: From tool input (preferred - session-specific)
@@ -85,11 +115,19 @@ def find_plan_file(plans_dir, tool_input):
             if key in tool_input:
                 path = tool_input[key]
                 if path and Path(path).exists():
-                    print(f"[find_plan_file] Method 1: Found plan from tool_input['{key}']: {path}")
+                    print(f"[find_plan_file] Method 1 (tool_input): Found plan from '{key}': {path}")
                     return path
-        print(f"[find_plan_file] Method 1: No valid path in tool_input. Keys present: {list(tool_input.keys())}")
+        print(f"[find_plan_file] Method 1: No valid path in tool_input. Keys: {list(tool_input.keys())}")
 
-    # Method 2: Fallback - search by recent modification time (not concurrent-safe)
+    # Method 2: Parse transcript for Write/Edit to ~/.claude/plans/ (session-specific)
+    if transcript_path:
+        plan_from_transcript = find_plan_from_transcript(transcript_path)
+        if plan_from_transcript and Path(plan_from_transcript).exists():
+            print(f"[find_plan_file] Method 2 (transcript): Found plan: {plan_from_transcript}")
+            return plan_from_transcript
+        print(f"[find_plan_file] Method 2: No plan file found in transcript")
+
+    # Method 3: Fallback - search by recent modification time (NOT concurrent-safe)
     import time
     cc_plans_dir = Path.home() / '.claude' / 'plans'
     search_dirs = [cc_plans_dir, plans_dir]
@@ -112,20 +150,26 @@ def find_plan_file(plans_dir, tool_input):
     if recent_plans:
         recent_plans.sort(key=lambda x: x[1], reverse=True)
         selected = str(recent_plans[0][0])
-        print(f"[find_plan_file] Method 2: Found {len(recent_plans)} recent plan(s), selected: {selected}")
+        print(f"[find_plan_file] Method 3 (timestamp): Found {len(recent_plans)} recent plan(s), selected: {selected}")
         return selected
 
-    print("[find_plan_file] Method 2: No recent plans found")
+    print("[find_plan_file] Method 3: No recent plans found")
     return None
 
-def find_transcript():
-    """Find the current session's transcript."""
-    # Claude stores transcripts in ~/.claude/projects/<hash>/
+def get_transcript_path(hook_data):
+    """Get transcript path from hook input (preferred) or fallback to timestamp search."""
+    # Method 1: From hook input (session-specific)
+    transcript_path = hook_data.get('transcript_path')
+    if transcript_path and Path(transcript_path).exists():
+        print(f"[get_transcript] From hook input: {transcript_path}")
+        return transcript_path
+
+    # Method 2: Fallback - search by recent modification time (NOT concurrent-safe)
+    print("[get_transcript] Falling back to timestamp search")
     claude_dir = Path.home() / '.claude' / 'projects'
     if not claude_dir.exists():
         return None
 
-    # Find most recently modified .jsonl file
     import time
     recent = []
     for proj_dir in claude_dir.iterdir():
@@ -237,16 +281,22 @@ def main():
         sys.exit(1)
 
     # Parse hook input
+    hook_data = {}
     tool_input = {}
     try:
-        data = json.loads(input_json)
-        tool_input = data.get('tool_input', {})
-        print(f"[hook] Received tool_input: {json.dumps(tool_input, indent=2)}")
+        hook_data = json.loads(input_json)
+        tool_input = hook_data.get('tool_input', {})
+        print(f"[hook] session_id: {hook_data.get('session_id', 'N/A')}")
+        print(f"[hook] transcript_path: {hook_data.get('transcript_path', 'N/A')}")
+        print(f"[hook] tool_input keys: {list(tool_input.keys())}")
     except Exception as e:
         print(f"[hook] Failed to parse input: {e}")
 
-    # Find plan file
-    plan_file = find_plan_file(plans_dir, tool_input)
+    # Get transcript path from hook input (session-specific)
+    src_transcript = get_transcript_path(hook_data)
+
+    # Find plan file (using transcript to find Write operations)
+    plan_file = find_plan_file(plans_dir, tool_input, src_transcript)
     if not plan_file:
         print("No plan file found", file=sys.stderr)
         sys.exit(0)  # Exit gracefully - maybe plan mode was cancelled
@@ -259,7 +309,7 @@ def main():
     # Determine new filenames with agent name prefix
     base_name = f"{date_prefix}-{AGENT_NAME}-{plan_name}"
     new_plan_path = Path(plans_dir) / f"{base_name}.md"
-    transcript_path = Path(transcripts_dir) / f"{base_name}.transcript.txt"
+    dest_transcript_path = Path(transcripts_dir) / f"{base_name}.transcript.txt"
 
     plan_saved = False
 
@@ -269,10 +319,9 @@ def main():
         print(f"Copied plan to: {new_plan_path}")
         plan_saved = True
 
-    # Find and clean transcript (saved locally, not committed)
-    src_transcript = find_transcript()
-    if src_transcript and clean_transcript(src_transcript, transcript_path):
-        print(f"Saved transcript (local only): {transcript_path}")
+    # Clean and save transcript (saved locally, not committed)
+    if src_transcript and clean_transcript(src_transcript, dest_transcript_path):
+        print(f"Saved transcript (local only): {dest_transcript_path}")
 
     # Auto-commit plan only (transcripts are gitignored)
     if plan_saved:

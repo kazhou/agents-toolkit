@@ -20,7 +20,7 @@ Automatically saves planning session transcripts and plan files to `agent_logs/`
 - Plan files copied to `agent_logs/plans/YYYY-MM-DD-<agent>-<heading-name>.md`
 - Original plan stays in agent's default location for re-editing
 - JSONL transcripts cleaned to readable text
-- Auto-commits saved files to git
+- Auto-commits saved plans to git (not transcripts, in case of sensitive info)
 - Re-entering plan mode allows editing the same plan
 
 ### File Naming Convention
@@ -46,7 +46,9 @@ cp -r .cursor/ /path/to/new-project/
 
 # Create agent_logs structure
 mkdir -p /path/to/new-project/agent_logs/{plans,transcripts}
-touch /path/to/new-project/agent_logs/{plans,transcripts}/.gitkeep
+touch /path/to/new-project/agent_logs/plans/.gitkeep
+
+# Add agent_logs/transcripts to .gitignore
 ```
 
 ### Directory Structure

@@ -26,13 +26,21 @@ INPUT=$(cat)
 # Date prefix for file naming
 DATE_PREFIX=$(date +"%Y-%m-%d")
 
+# Export variables for Python
+export HOOK_INPUT="$INPUT"
+export HOOK_PLANS_DIR="$PLANS_DIR"
+export HOOK_TRANSCRIPTS_DIR="$TRANSCRIPTS_DIR"
+export HOOK_DATE_PREFIX="$DATE_PREFIX"
+export HOOK_PROJECT_DIR="$CLAUDE_PROJECT_DIR"
+
 # Python script for all processing
-python3 << 'PYEOF' "$INPUT" "$PLANS_DIR" "$TRANSCRIPTS_DIR" "$DATE_PREFIX" "$CLAUDE_PROJECT_DIR"
+python3 << 'PYEOF'
 import json
 import re
 import sys
 import os
 import subprocess
+import shutil
 from pathlib import Path
 
 def extract_plan_name(plan_path):
@@ -70,19 +78,25 @@ def find_plan_file(plans_dir, tool_input):
                 if path and Path(path).exists():
                     return path
 
-    # Method 2: Most recently modified .md file in plans_dir (last 5 min)
+    # Method 2: Search CC's default plans directory (~/.claude/plans)
     import time
+    cc_plans_dir = Path.home() / '.claude' / 'plans'
+    search_dirs = [cc_plans_dir, plans_dir]
+
     recent_plans = []
-    for p in plans_dir.glob('*.md'):
-        # Skip already-dated files (YYYY-MM-DD pattern)
-        if re.match(r'^\d{4}-\d{2}-\d{2}', p.name):
+    for search_dir in search_dirs:
+        if not search_dir.exists():
             continue
-        # Skip .gitkeep
-        if p.name == '.gitkeep':
-            continue
-        # Check if modified in last 5 minutes
-        if time.time() - p.stat().st_mtime < 300:
-            recent_plans.append((p, p.stat().st_mtime))
+        for p in search_dir.glob('*.md'):
+            # Skip already-dated files (YYYY-MM-DD pattern)
+            if re.match(r'^\d{4}-\d{2}-\d{2}', p.name):
+                continue
+            # Skip .gitkeep
+            if p.name == '.gitkeep':
+                continue
+            # Check if modified in last 5 minutes
+            if time.time() - p.stat().st_mtime < 300:
+                recent_plans.append((p, p.stat().st_mtime))
 
     if recent_plans:
         recent_plans.sort(key=lambda x: x[1], reverse=True)
@@ -197,14 +211,16 @@ def git_commit(project_dir, files, message):
         return False
 
 def main():
-    if len(sys.argv) < 6:
-        sys.exit(1)
+    # Get variables from environment
+    input_json = os.environ.get('HOOK_INPUT', '{}')
+    plans_dir = os.environ.get('HOOK_PLANS_DIR', '')
+    transcripts_dir = os.environ.get('HOOK_TRANSCRIPTS_DIR', '')
+    date_prefix = os.environ.get('HOOK_DATE_PREFIX', '')
+    project_dir = os.environ.get('HOOK_PROJECT_DIR', '')
 
-    input_json = sys.argv[1]
-    plans_dir = sys.argv[2]
-    transcripts_dir = sys.argv[3]
-    date_prefix = sys.argv[4]
-    project_dir = sys.argv[5]
+    if not plans_dir or not transcripts_dir:
+        print("Missing required environment variables", file=sys.stderr)
+        sys.exit(1)
 
     # Parse hook input
     tool_input = {}
@@ -225,25 +241,17 @@ def main():
     if not plan_name:
         plan_name = Path(plan_file).stem
 
-    # Determine new filenames
+    # Determine new filenames (overwrites existing - history preserved in git)
     base_name = f"{date_prefix}-{plan_name}"
     new_plan_path = Path(plans_dir) / f"{base_name}.md"
     transcript_path = Path(transcripts_dir) / f"{base_name}.transcript.txt"
 
-    # Handle naming conflicts (if file already exists, append short suffix)
-    counter = 1
-    while new_plan_path.exists() or transcript_path.exists():
-        base_name = f"{date_prefix}-{plan_name}-{counter}"
-        new_plan_path = Path(plans_dir) / f"{base_name}.md"
-        transcript_path = Path(transcripts_dir) / f"{base_name}.transcript.txt"
-        counter += 1
-
     files_to_commit = []
 
-    # Rename plan file
+    # Copy plan file (keep original for CC to edit on re-entry)
     if plan_file != str(new_plan_path):
-        Path(plan_file).rename(new_plan_path)
-        print(f"Saved plan: {new_plan_path}")
+        shutil.copy2(plan_file, new_plan_path)
+        print(f"Copied plan to: {new_plan_path}")
         files_to_commit.append(str(new_plan_path))
 
     # Find and clean transcript

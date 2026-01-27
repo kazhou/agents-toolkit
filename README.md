@@ -17,9 +17,11 @@ Automatically saves Claude Code planning session transcripts and plan files to `
 
 ### Features
 
-- Plan files renamed from random names to `YYYY-MM-DD-<heading-name>.md`
+- Plan files copied to `agent_logs/plans/YYYY-MM-DD-<heading-name>.md`
+- Original plan stays in CC's default location (`~/.claude/plans/`) for re-editing
 - JSONL transcripts cleaned to readable text
 - Auto-commits saved files to git
+- Re-entering plan mode allows editing the same plan
 
 ### Setup for New Projects
 
@@ -34,22 +36,27 @@ touch /path/to/new-project/agent_logs/{plans,transcripts}/.gitkeep
 ### Directory Structure
 
 ```
+~/.claude/plans/             # CC's default location (editable originals)
+    └── random-name.md
+
 .claude/
-├── settings.json           # plansDirectory + hook config
+├── settings.json            # Hook config
 └── hooks/
     └── save-planning-logs.sh
 
 agent_logs/
-├── plans/           # YYYY-MM-DD-<plan-name>.md
+├── plans/           # YYYY-MM-DD-<plan-name>.md (archived copies)
 ├── transcripts/     # YYYY-MM-DD-<plan-name>.transcript.txt
 └── LOG.md           # Session summaries (reverse chronological)
 ```
 
 ### How It Works
 
-1. `plansDirectory` in settings.json points to `./agent_logs/plans`
+1. CC creates/edits plans in its default location (`~/.claude/plans/`)
 2. When you exit plan mode (`ExitPlanMode`), the hook triggers
-3. Hook renames plan file using first `# Heading` as the name
+3. Hook **copies** plan file to `agent_logs/plans/` with dated name (using first `# Heading`)
 4. Hook cleans the JSONL transcript to readable text
 5. Both files are auto-committed to git
+6. Re-entering plan mode finds and edits the original file
+7. Exiting again updates the archived copy
 

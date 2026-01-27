@@ -1,5 +1,4 @@
 {
-  "plansDirectory": "./agent_logs/plans",
   "hooks": {
     "PostToolUse": [
       {

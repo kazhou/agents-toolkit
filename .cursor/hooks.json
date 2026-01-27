@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "./.cursor/hooks/save-planning-logs-cursor.sh",
+        "matcher": "**/plans/*.md",
+        "timeout": 30
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "./.cursor/hooks/save-planning-logs-cursor.sh",
+        "timeout": 30
+      }
+    ]
+  }
+}

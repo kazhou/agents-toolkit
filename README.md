@@ -13,22 +13,38 @@ Repo for various coding agents scripts, guidelines, and tools. To copy into/reus
 
 ## Planning Session Logger
 
-Automatically saves Claude Code planning session transcripts and plan files to `agent_logs/` when exiting plan mode.
+Automatically saves planning session transcripts and plan files to `agent_logs/` when exiting plan mode. Supports both **Claude Code** and **Cursor**.
 
 ### Features
 
-- Plan files copied to `agent_logs/plans/YYYY-MM-DD-<heading-name>.md`
-- Original plan stays in CC's default location (`~/.claude/plans/`) for re-editing
+- Plan files copied to `agent_logs/plans/YYYY-MM-DD-<agent>-<heading-name>.md`
+- Original plan stays in agent's default location for re-editing
 - JSONL transcripts cleaned to readable text
 - Auto-commits saved files to git
 - Re-entering plan mode allows editing the same plan
 
+### File Naming Convention
+
+Files include the agent name for easy identification:
+- Plans: `YYYY-MM-DD-<agent>-<plan-name>.md`
+- Transcripts: `YYYY-MM-DD-<agent>-<plan-name>.transcript.txt`
+
+Examples:
+- `2026-01-27-claude-add-authentication.md`
+- `2026-01-27-cursor-refactor-api.md`
+
 ### Setup for New Projects
 
-Copy the `.claude/` directory and create the agent_logs structure:
+Copy agent config directories and create the agent_logs structure:
 
 ```bash
+# For Claude Code
 cp -r .claude/ /path/to/new-project/
+
+# For Cursor
+cp -r .cursor/ /path/to/new-project/
+
+# Create agent_logs structure
 mkdir -p /path/to/new-project/agent_logs/{plans,transcripts}
 touch /path/to/new-project/agent_logs/{plans,transcripts}/.gitkeep
 ```
@@ -36,29 +52,60 @@ touch /path/to/new-project/agent_logs/{plans,transcripts}/.gitkeep
 ### Directory Structure
 
 ```
+# Claude Code
 ~/.claude/plans/             # CC's default location (editable originals)
-    └── random-name.md
-
 .claude/
-├── settings.json            # Hook config
+├── settings.json            # Hook config (PostToolUse on ExitPlanMode)
 └── hooks/
     └── save-planning-logs.sh
 
+# Cursor
+~/.cursor/plans/             # Cursor's global plans (default)
+.cursor/plans/               # Workspace plans (after "Save to workspace")
+.cursor/
+├── hooks.json               # Hook config (afterFileEdit + sessionEnd)
+└── hooks/
+    └── save-planning-logs-cursor.sh
+
+# Shared output
 agent_logs/
-├── plans/           # YYYY-MM-DD-<plan-name>.md (archived copies)
-├── transcripts/     # YYYY-MM-DD-<plan-name>.transcript.txt
+├── plans/           # YYYY-MM-DD-<agent>-<plan-name>.md (archived copies)
+├── transcripts/     # YYYY-MM-DD-<agent>-<plan-name>.transcript.txt
 └── LOG.md           # Session summaries (reverse chronological)
 ```
 
 ### How It Works
 
-1. CC creates/edits plans in its default location (`~/.claude/plans/`)
+#### Claude Code
+1. CC creates/edits plans in `~/.claude/plans/`
 2. When you exit plan mode (`ExitPlanMode`), the hook triggers
 3. Hook **copies** plan file to `agent_logs/plans/` with dated name (using first `# Heading`)
 4. Hook cleans the JSONL transcript to readable text
 5. Both files are auto-committed to git
-6. Re-entering plan mode finds and edits the original file
-7. Exiting again updates the archived copy
+
+#### Cursor
+1. Cursor creates plans in `~/.cursor/plans/` (global) or `.cursor/plans/` (workspace)
+2. Hooks trigger on:
+   - `afterFileEdit` - when plan is saved to workspace (`.cursor/plans/`)
+   - `sessionEnd` - fallback for plans in global directory (`~/.cursor/plans/`)
+3. Hook **copies** plan file to `agent_logs/plans/` with dated name
+4. Hook cleans the transcript (using `transcript_path` from Cursor)
+5. Both files are auto-committed to git
+
+**Note:** For best results with Cursor, click "Save to workspace" when creating plans. This triggers the `afterFileEdit` hook immediately. Plans saved only to the global directory will be captured when the session ends.
+
+### Toggle Hooks
+
+To enable/disable Cursor hooks:
+
+```bash
+.cursor/toggle-hooks.sh          # Toggle current state
+.cursor/toggle-hooks.sh on       # Enable hooks
+.cursor/toggle-hooks.sh off      # Disable hooks
+.cursor/toggle-hooks.sh status   # Show current state
+```
+
+This renames `hooks.json` to `hooks.json.disabled` (and vice versa).
 
 
 ---

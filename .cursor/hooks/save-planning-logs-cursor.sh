@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
 #
-# save-planning-logs.sh - Save planning session logs when plan mode exits
+# save-planning-logs-cursor.sh - Save planning session logs for Cursor
 #
-# Triggered by PostToolUse hook on ExitPlanMode
-# - Renames plan file from random name to YYYY-MM-DD-<heading-name>.md
-# - Cleans JSONL transcript to readable text
+# Triggered by:
+#   - afterFileEdit hook when plan files are saved to workspace
+#   - sessionEnd hook as fallback for plans in global directory
+#
+# - Renames plan file to YYYY-MM-DD-cursor-<heading-name>.md
+# - Cleans transcript to readable text (uses transcript_path from hook input)
 # - Auto-commits both files
 #
-# Portable: uses $CLAUDE_PROJECT_DIR for all paths
+# Portable: uses $CURSOR_PROJECT_DIR for all paths
 #
 
 set -euo pipefail
 
-# Configuration
-AGENT_LOGS_DIR="${CLAUDE_PROJECT_DIR}/agent_logs"
+# Configuration - use CURSOR_PROJECT_DIR or fallback to pwd
+PROJECT_DIR="${CURSOR_PROJECT_DIR:-$(pwd)}"
+AGENT_LOGS_DIR="${PROJECT_DIR}/agent_logs"
 PLANS_DIR="$AGENT_LOGS_DIR/plans"
 TRANSCRIPTS_DIR="$AGENT_LOGS_DIR/transcripts"
 
@@ -31,7 +35,7 @@ export HOOK_INPUT="$INPUT"
 export HOOK_PLANS_DIR="$PLANS_DIR"
 export HOOK_TRANSCRIPTS_DIR="$TRANSCRIPTS_DIR"
 export HOOK_DATE_PREFIX="$DATE_PREFIX"
-export HOOK_PROJECT_DIR="$CLAUDE_PROJECT_DIR"
+export HOOK_PROJECT_DIR="$PROJECT_DIR"
 
 # Python script for all processing
 python3 << 'PYEOF'
@@ -43,7 +47,7 @@ import subprocess
 import shutil
 from pathlib import Path
 
-AGENT_NAME = "claude"
+AGENT_NAME = "cursor"
 
 def extract_plan_name(plan_path):
     """Extract plan name from first heading or filename."""
@@ -68,22 +72,28 @@ def extract_plan_name(plan_path):
     # Fallback to filename (without .md)
     return Path(plan_path).stem
 
-def find_plan_file(plans_dir, tool_input):
-    """Find the plan file that was just written."""
+def find_plan_file(plans_dir, hook_data):
+    """Find the plan file - from hook input or by searching directories."""
     plans_dir = Path(plans_dir)
-
-    # Method 1: From tool input (if available)
-    if tool_input:
-        for key in ['plan_path', 'planPath', 'file_path', 'filePath', 'file']:
-            if key in tool_input:
-                path = tool_input[key]
-                if path and Path(path).exists():
-                    return path
-
-    # Method 2: Search CC's default plans directory (~/.claude/plans)
     import time
-    cc_plans_dir = Path.home() / '.claude' / 'plans'
-    search_dirs = [cc_plans_dir, plans_dir]
+
+    # Method 1: From hook input (afterFileEdit provides file path)
+    file_path = hook_data.get('file_path') or hook_data.get('filePath')
+    if file_path:
+        path = Path(file_path)
+        if path.exists() and path.suffix == '.md':
+            # Check if it's a plan file (in a plans directory)
+            if 'plans' in str(path):
+                # Skip already-dated files
+                if not re.match(r'^\d{4}-\d{2}-\d{2}', path.name):
+                    return str(path)
+
+    # Method 2: Search Cursor's plans directories
+    # Check both global (~/.cursor/plans) and workspace (.cursor/plans)
+    cursor_global_plans = Path.home() / '.cursor' / 'plans'
+    cursor_workspace_plans = Path(os.environ.get('HOOK_PROJECT_DIR', '')) / '.cursor' / 'plans'
+
+    search_dirs = [cursor_global_plans, cursor_workspace_plans, plans_dir]
 
     recent_plans = []
     for search_dir in search_dirs:
@@ -96,8 +106,8 @@ def find_plan_file(plans_dir, tool_input):
             # Skip .gitkeep
             if p.name == '.gitkeep':
                 continue
-            # Check if modified in last 5 minutes
-            if time.time() - p.stat().st_mtime < 300:
+            # Check if modified in last 10 minutes (longer window for fallback)
+            if time.time() - p.stat().st_mtime < 600:
                 recent_plans.append((p, p.stat().st_mtime))
 
     if recent_plans:
@@ -106,21 +116,26 @@ def find_plan_file(plans_dir, tool_input):
 
     return None
 
-def find_transcript():
-    """Find the current session's transcript."""
-    # Claude stores transcripts in ~/.claude/projects/<hash>/
-    claude_dir = Path.home() / '.claude' / 'projects'
-    if not claude_dir.exists():
+def find_transcript(hook_data):
+    """Find the session's transcript - from hook input or by searching."""
+    # Method 1: From hook input (Cursor provides transcript_path)
+    transcript_path = hook_data.get('transcript_path') or hook_data.get('transcriptPath')
+    if transcript_path and Path(transcript_path).exists():
+        return transcript_path
+
+    # Method 2: Search Cursor's transcript directories
+    # Cursor may store transcripts in ~/.cursor/projects/<hash>/
+    cursor_dir = Path.home() / '.cursor' / 'projects'
+    if not cursor_dir.exists():
         return None
 
-    # Find most recently modified .jsonl file
     import time
     recent = []
-    for proj_dir in claude_dir.iterdir():
+    for proj_dir in cursor_dir.iterdir():
         if not proj_dir.is_dir():
             continue
         for f in proj_dir.glob('*.jsonl'):
-            if time.time() - f.stat().st_mtime < 300:
+            if time.time() - f.stat().st_mtime < 600:
                 recent.append((f, f.stat().st_mtime))
 
     if recent:
@@ -225,18 +240,17 @@ def main():
         sys.exit(1)
 
     # Parse hook input
-    tool_input = {}
+    hook_data = {}
     try:
-        data = json.loads(input_json)
-        tool_input = data.get('tool_input', {})
+        hook_data = json.loads(input_json)
     except:
         pass
 
     # Find plan file
-    plan_file = find_plan_file(plans_dir, tool_input)
+    plan_file = find_plan_file(plans_dir, hook_data)
     if not plan_file:
-        print("No plan file found", file=sys.stderr)
-        sys.exit(0)  # Exit gracefully - maybe plan mode was cancelled
+        # No plan found - this is fine for sessionEnd on non-planning sessions
+        sys.exit(0)
 
     # Extract plan name
     plan_name = extract_plan_name(plan_file)
@@ -250,14 +264,14 @@ def main():
 
     files_to_commit = []
 
-    # Copy plan file (keep original for CC to edit on re-entry)
+    # Copy plan file (keep original for Cursor to edit on re-entry)
     if plan_file != str(new_plan_path):
         shutil.copy2(plan_file, new_plan_path)
         print(f"Copied plan to: {new_plan_path}")
         files_to_commit.append(str(new_plan_path))
 
     # Find and clean transcript
-    src_transcript = find_transcript()
+    src_transcript = find_transcript(hook_data)
     if src_transcript and clean_transcript(src_transcript, transcript_path):
         print(f"Saved transcript: {transcript_path}")
         files_to_commit.append(str(transcript_path))

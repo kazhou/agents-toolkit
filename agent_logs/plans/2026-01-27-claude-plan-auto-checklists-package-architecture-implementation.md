@@ -150,12 +150,19 @@ class MyGenerator(InstanceChecklistGenerator):
 
 ## Implementation Order
 
-### Phase 1: Foundation
+### Phase 1: Foundation & Data Discovery
 1. Pull latest from reference repos (RLCF, tick, CheckEval, RocketEval-ICLR, InteractEval)
-2. Set up package structure with `uv`
-3. Implement `models.py` - Pydantic data models
-4. Implement `config.py` - OpenRouter config
-5. Implement `providers/openrouter.py` - async client
+2. **Explore repo test data** - identify example inputs for testing:
+   - RLCF: WildChat samples, requirement generation examples
+   - tick: InFoBench instruction samples
+   - CheckEval: SummEval dimensions, sample summaries
+   - RocketEval: MT-Bench/WildBench query samples
+   - InteractEval: Think-aloud attributes, SummEval samples
+3. Copy/reference relevant test data to `tests/fixtures/`
+4. Set up package structure with `uv`
+5. Implement `models.py` - Pydantic data models
+6. Implement `config.py` - OpenRouter config
+7. Implement `providers/openrouter.py` - async client
 
 ### Phase 2: Instance-level Generators (simpler)
 6. Implement `generators/base.py` - base classes
@@ -195,10 +202,14 @@ git -C InteractEval pull 2>/dev/null || git clone https://github.com/BBeeChu/Int
 
 ## Verification Plan
 
-1. **Unit tests**: Test each generator and scorer independently with mock LLM responses
-2. **Integration tests**: Run end-to-end with real OpenRouter calls on sample inputs
-3. **Comparison**: Compare outputs to original repo implementations where possible
-4. **Example notebook**: Create Jupyter notebook demonstrating all methods
+1. **Unit tests**: Test each generator and scorer with **real LLM calls** (cheap model like gpt-4o-mini) using test data from reference repos
+2. **Test data**: Use actual samples from reference repos (InFoBench, WildChat, SummEval, etc.)
+3. **Validation checks**:
+   - Format: Are items yes/no questions? Within expected count range?
+   - Parsing: Does response parsing handle actual LLM output formats?
+   - Scoring: Does scoring produce valid 0-1 scores?
+4. **Comparison**: Where possible, compare checklist outputs to reference repo outputs
+5. **Example notebook**: Create Jupyter notebook demonstrating all methods
 
 ---
 

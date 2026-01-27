@@ -133,3 +133,17 @@ Assistant: Now CC uses its default location: `/home/karenzhou/.claude/plans/para
 Let me create a test plan.
 Assistant: [Tool: Write]
 Assistant: [Tool: ExitPlanMode]
+Assistant: Let me verify both files exist.
+Assistant: [Tool: Bash]
+Assistant: Both files exist:
+- **Original**: `~/.claude/plans/parallel-greeting-goblet.md` (268 bytes)
+- **Copy**: `agent_logs/plans/2026-01-26-test-copy-workflow.md` (268 bytes)
+
+Now let's test re-entering plan mode to verify CC edits the original.
+Assistant: [Tool: EnterPlanMode]
+Assistant: CC found and can edit the existing plan. Let me update it to confirm the test passed.
+Assistant: [Tool: Edit]
+Assistant: [Tool: ExitPlanMode]
+Assistant: No response requested.
+User: ok let's test the new functionality of reentering plan mode. also update the readme
+Assistant: [Tool: ExitPlanMode]

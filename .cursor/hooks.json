@@ -1,6 +1,12 @@
 {
   "version": 1,
   "hooks": {
+    "sessionStart": [
+      {
+        "command": "./.cursor/hooks/init-agent-logs.sh",
+        "timeout": 5
+      }
+    ],
     "afterFileEdit": [
       {
         "command": "./.cursor/hooks/save-planning-logs-cursor.sh",

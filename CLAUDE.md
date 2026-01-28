@@ -36,8 +36,15 @@ Guidelines for coding agents
     - Fast package installation with uv (10-100x faster than pip)
     - Automatic dependency tracking with pyproject.toml
     - Clean, reproducible research setup
-  - Instead of `source .venv/bin/activate && python script.py`, use `uv run python script.py` 
-  
+
+## Running Commands
+- **Always use `uv run`** for ALL Python commands:
+  - `uv run pytest -v` (not pytest directly)
+  - `uv run python script.py` (not python directly)
+- Bash commands don't preserve environment between calls
+- `source .venv/bin/activate` has NO effect on subsequent commands
+  - Instead of `source .venv/bin/activate && python script.py`, use `uv run python script.py`
+
 ## Planning
 - Always start a project in Plan Mode. Ask the user for clarification. When in doubt, ask the user.
 - Always search the web for real API documentation. No need to ask for permission to search the web.
@@ -53,7 +60,7 @@ Guidelines for coding agents
 - Commit as you go! Commit frequently.
 
 ## Testing
-- Create tests in `tests/` in the project. 
+- Create tests in `tests/` in the project.
 - Add a `tests/README.md` to document tests. Add a link to this doc in the main README
 - Do Test-Driven Development whenever possible, i.e., implement tests for functions before writing the functions themselves. Define example inputs and outputs. Feel free to create test input files in `tests/` if needed
   - Do NOT create mock implementations for functionality that doesn't exist yet. Run the tests and confirm they fail. Do not to write implementation code at this stage.
@@ -76,3 +83,15 @@ Guidelines for coding agents
   - These session summaries should be concise
 
 
+# Claude-specific
+
+## Compaction Preservation
+When context is compacted, ALWAYS preserve:
+- List of all modified files this session
+- Pending documentation updates
+- Current task and next steps
+- Any failing tests that need attention
+
+## Available Skills
+- `/update-docs` - Update README and LOG.md after completing work
+- `/fix-issue [number]` - Implement a GitHub issue using TDD

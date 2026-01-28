@@ -6,12 +6,21 @@ This is a work in progress!
 
 # Contents
 
-- [AGENTS.md](AGENTS.md): guidelines/preferences for agents. Agent-agnostic (e.g., can be used w/ Claude Code, Cursor, etc.) with allowance for further user modification
-  - for Claude Code: `cp AGENTS.md ~/.claude/CLAUDE.md` (for global) or `cp AGENTS.md ./CLAUDE.md` (for project)
-  - for Cursor: `cp AGENTS.md ~/.cursor/rules/`
+- **Agent Guidelines**
+  - [AGENTS.md](AGENTS.md): Cross-platform guidelines for coding agents (Cursor, Copilot, Codex, etc.)
+  - [CLAUDE.md](CLAUDE.md): Claude Code-specific version with additional CC features (compaction preservation, skill references)
+  - Setup:
+    - Claude Code: Already uses `CLAUDE.md` automatically (project-level)
+    - Cursor: `cp AGENTS.md ~/.cursor/rules/`
+    - Global Claude Code: `cp CLAUDE.md ~/.claude/CLAUDE.md`
+- **Claude Code Skills** (see [Skills section](#claude-code-skills))
+  - `/update-docs` - Update README and LOG.md after completing work
+  - `/fix-issue [number]` - Implement a GitHub issue using TDD
 - [Planning Session Logger](#planning-session-logger): automatically saves planning mode transcripts and plan files
+- [Documentation Reminder Hook (CC)](#documentation-hook-for-cc): doc-reminder hook for Write/Edit  
 
 ---
+
 
 ## Planning Session Logger
 
@@ -110,6 +119,98 @@ To enable/disable Cursor hooks:
 
 This renames `hooks.json` to `hooks.json.disabled` (and vice versa).
 
+
+## Documentation Hook for CC
+
+Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (local)
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Remember: Update agent_logs/LOG.md and README.md if needed'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}    
+```
+
+---
+
+## Claude Code Skills
+
+Custom skills for Claude Code workflows. Skills are invoked with `/skill-name` in the chat.
+
+### Available Skills
+
+| Skill | Description | Usage |
+|-------|-------------|-------|
+| `/update-docs` | Update documentation after completing work | `/update-docs` |
+| `/fix-issue` | Implement a GitHub issue using TDD | `/fix-issue 123` |
+
+### Setup for New Projects
+
+Copy the skills directory to your project:
+
+```bash
+cp -r .claude/skills/ /path/to/new-project/.claude/skills/
+```
+
+Or copy to personal directory for use across all projects:
+
+```bash
+cp -r .claude/skills/* ~/.claude/skills/
+```
+
+### Skill Details
+
+#### `/update-docs`
+
+Updates README.md and agent_logs/LOG.md after completing work:
+1. Shows recent git changes (`git diff HEAD~5 --stat`)
+2. Prepends session summary to agent_logs/LOG.md
+3. Updates README.md if functionality changed
+4. Commits documentation changes
+
+#### `/fix-issue [number]`
+
+Implements a GitHub issue using Test-Driven Development:
+1. Fetches issue details from GitHub (`gh issue view`)
+2. Creates feature branch (`feature/<issue-number>`)
+3. Writes tests first (TDD) - confirms they fail
+4. Implements the fix to pass tests
+5. Updates documentation
+6. Creates PR (`gh pr create --fill`)
+
+### Creating Custom Skills
+
+Skills live in `.claude/skills/<name>/SKILL.md`:
+
+```yaml
+---
+name: my-skill
+description: What it does and when to use it
+disable-model-invocation: true  # Only manual /my-skill invocation
+allowed-tools: Read, Write, Edit, Bash(git *)
+---
+
+# Instructions for Claude to follow...
+```
+
+Key frontmatter options:
+- `disable-model-invocation: true` - Prevents auto-invocation; requires `/skill-name`
+- `allowed-tools` - Tools Claude can use without permission prompts
+- `argument-hint` - Shows in autocomplete (e.g., `[issue-number]`)
+
+See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full reference.
 
 ---
 

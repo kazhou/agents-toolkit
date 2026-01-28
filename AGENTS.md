@@ -39,6 +39,7 @@ Guidelines for coding agents
     - Fast package installation with uv (10-100x faster than pip)
     - Automatic dependency tracking with pyproject.toml
     - Clean, reproducible research setup
+  -  Instead of:                                                 `source .venv/bin/activate && python script.py` use `uv run python script.py` 
   
 ## Planning
 - Always start a project in Plan Mode. Ask the user for clarification. When in doubt, ask the user.

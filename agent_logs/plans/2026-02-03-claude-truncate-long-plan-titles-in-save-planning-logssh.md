@@ -1,39 +1,43 @@
 # Truncate Long Plan Titles in save-planning-logs.sh
 
 ## Problem
-The `extract_plan_name` function extracts plan names from markdown headings without length limits. Long headings create excessively long filenames that could:
-- Exceed filesystem limits (255 chars for most systems)
-- Be unwieldy to work with
+Long plan headings cause two issues:
+1. Excessively long filenames (filesystem limit ~255 chars)
+2. OSError when `Path(content).exists()` is called on content strings > 4096 chars
 
-## Solution
-Add truncation logic to `extract_plan_name` function with these requirements:
-- Max length: **50 characters** for the plan name portion (reasonable for readability while leaving room for date prefix and extension)
-- Clean truncation: avoid cutting mid-word when possible
-- No trailing hyphens after truncation
+## Solution (Implemented)
 
-## Implementation
+### File modified
+- `.claude/hooks/save-planning-logs.sh`
 
-### File to modify
-- `.claude/hooks/save-planning-logs.sh` (lines 67-93, `extract_plan_name` function)
-
-### Changes
-Add truncation after the kebab-case conversion (around line 91):
-
+### Change 1: Title truncation (lines 95-102)
+Added truncation after kebab-case conversion (max 50 chars, clean word boundaries):
 ```python
-# After: name = name.strip('-')
-# Add truncation logic:
 MAX_LENGTH = 50
 if len(name) > MAX_LENGTH:
-    # Try to truncate at word boundary (hyphen)
     truncated = name[:MAX_LENGTH]
     last_hyphen = truncated.rfind('-')
-    if last_hyphen > MAX_LENGTH // 2:  # Only use if reasonable
+    if last_hyphen > MAX_LENGTH // 2:
         name = truncated[:last_hyphen]
     else:
         name = truncated.rstrip('-')
 ```
 
+### Change 2: Path validation guard (lines 73-83)
+Prevent OSError when content is passed instead of a file path:
+```python
+could_be_path = '\n' not in plan_content_or_path and len(plan_content_or_path) < 4096
+if could_be_path:
+    # ... try Path().exists()
+else:
+    content = plan_content_or_path  # It's definitely content
+```
+
+### Change 3: Use file path from transcript (line 317)
+Pass the file path (from Write tool call) instead of content:
+```python
+plan_name = extract_plan_name(plan_file_path if plan_file_path else plan_content)
+```
+
 ## Verification
-1. Test with a long heading like `# This Is A Very Long Plan Title That Should Definitely Be Truncated Because It Exceeds The Maximum Length`
-2. Verify the resulting filename is truncated cleanly
-3. Verify short titles still work normally
+Run the hook on a plan with a long title - should truncate cleanly without errors

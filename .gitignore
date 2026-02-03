@@ -209,3 +209,5 @@ __marimo__/
 # Agent logs - transcripts are local only
 agent_logs/transcripts/
 
+CLAUDE.md
+AGENTS.md

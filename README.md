@@ -17,8 +17,9 @@ This is a work in progress!
   - `/update-docs` - Update README and LOG.md after completing work
   - `/fix-issue [number]` - Implement a GitHub issue using TDD
 - [Planning Session Logger](#planning-session-logger): automatically saves planning mode transcripts and plan files
-- [Documentation Reminder Hook (CC)](#documentation-hook-for-cc): doc-reminder hook for Write/Edit  
+- [Documentation Reminder Hook (CC)](#documentation-hook-for-cc): doc-reminder hook for Write/Edit
 - **Claude Code Notifications** - get notified when Claude needs input
+- **[Tests](tests/README.md)** - Test suite for validating planning session workflows
 
 ---
 
@@ -69,9 +70,10 @@ echo "agent_logs/transcripts/" >> /path/to/new-project/.gitignore
 # Claude Code
 ~/.claude/plans/             # CC's default location (editable originals)
 .claude/
-├── settings.json            # Hook config (PostToolUse on ExitPlanMode)
+├── settings.json            # Hook config (Stop + SessionEnd hooks)
 └── hooks/
-    └── save-planning-logs.sh
+    ├── save-planning-logs.sh
+    └── debug-hook-input.sh  # Optional: for debugging hook inputs
 
 # Cursor
 ~/.cursor/plans/             # Cursor's global plans (default)
@@ -91,10 +93,18 @@ agent_logs/
 
 #### Claude Code
 1. CC creates/edits plans in `~/.claude/plans/`
-2. When you exit plan mode (`ExitPlanMode`), the hook triggers
-3. Hook **copies** plan file to `agent_logs/plans/` with dated name (using first `# Heading`)
-4. Hook cleans the JSONL transcript to readable text
-5. Both files are auto-committed to git
+2. When you approve a plan, hooks trigger based on approval type:
+   - **Accept edits**: `Stop` hook fires when Claude finishes responding
+   - **Clear context**: `SessionEnd` hook fires with `reason: "clear"`
+3. Hook parses the session transcript to find `ExitPlanMode` tool call
+4. Hook **copies** plan content to `agent_logs/plans/` with dated name (using first `# Heading`)
+5. Hook cleans the JSONL transcript to readable text
+6. Plan file is auto-committed to git (transcripts are gitignored)
+
+**Supported workflows:**
+- `/plan` command
+- Shift+Tab to enter plan mode mid-session
+- Both "accept edits" and "clear context" approval options
 
 #### Cursor (not tested yet)
 1. Cursor creates plans in `~/.cursor/plans/` (global) or `.cursor/plans/` (workspace)
@@ -216,6 +226,8 @@ See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full r
 
 
 ## Claude Code Notifications
+ Note: this doesn't seem to work in VSCode/Cursor https://github.com/anthropics/claude-code/issues/11156
+
 Add to `.claude/settings.json`:
 ```
 {

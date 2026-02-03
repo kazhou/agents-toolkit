@@ -1,12 +1,24 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "Stop": [
       {
-        "matcher": "ExitPlanMode",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/save-planning-logs.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/save-planning-logs.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/save-planning-logs.sh",
+            "timeout": 30
           }
         ]
       }

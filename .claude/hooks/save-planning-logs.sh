@@ -70,11 +70,16 @@ def extract_plan_name(plan_content_or_path):
 
     # If it's a path, read the file
     if isinstance(plan_content_or_path, str):
-        path = Path(plan_content_or_path)
-        if path.exists() and path.is_file():
-            content = path.read_text(errors='replace')
+        # Check if it could be a valid path (no newlines, reasonable length)
+        could_be_path = '\n' not in plan_content_or_path and len(plan_content_or_path) < 4096
+        if could_be_path:
+            path = Path(plan_content_or_path)
+            if path.exists() and path.is_file():
+                content = path.read_text(errors='replace')
+            else:
+                content = plan_content_or_path
         else:
-            # It might be the content itself
+            # It's definitely content, not a path
             content = plan_content_or_path
 
     # Find first # heading
@@ -87,6 +92,15 @@ def extract_plan_name(plan_content_or_path):
         name = name.lower()
         name = re.sub(r'-+', '-', name)
         name = name.strip('-')
+        # Truncate if too long (avoid excessively long filenames)
+        MAX_LENGTH = 50
+        if len(name) > MAX_LENGTH:
+            truncated = name[:MAX_LENGTH]
+            last_hyphen = truncated.rfind('-')
+            if last_hyphen > MAX_LENGTH // 2:  # Use word boundary if reasonable
+                name = truncated[:last_hyphen]
+            else:
+                name = truncated.rstrip('-')
         if name:
             return name
 
@@ -299,8 +313,8 @@ def main():
         print("No plan content found", file=sys.stderr)
         sys.exit(0)
 
-    # Extract plan name from content
-    plan_name = extract_plan_name(plan_content)
+    # Extract plan name from file path (preferred) or content
+    plan_name = extract_plan_name(plan_file_path if plan_file_path else plan_content)
     print(f"[hook] Extracted plan name: {plan_name}")
 
     # Determine new filenames with agent name prefix

@@ -226,7 +226,9 @@ See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full r
 ## Claude Code Notifications
  Note: this doesn't seem to work in VSCode/Cursor https://github.com/anthropics/claude-code/issues/11156
 
-Add to `.claude/settings.json`:
+Add to `.claude/settings.json`: 
+
+Mac:
 ```
 {
   "hooks": {
@@ -237,6 +239,25 @@ Add to `.claude/settings.json`:
           {
             "type": "command",
             "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Linux:
+```
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Claude Code needs your attention'"
           }
         ]
       }

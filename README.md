@@ -19,7 +19,6 @@ This is a work in progress!
 - [Planning Session Logger](#planning-session-logger): automatically saves planning mode transcripts and plan files
 - [Documentation Reminder Hook (CC)](#documentation-hook-for-cc): doc-reminder hook for Write/Edit
 - **Claude Code Notifications** - get notified when Claude needs input
-- **[Tests](tests/README.md)** - Test suite for validating planning session workflows
 
 ---
 
@@ -72,8 +71,7 @@ echo "agent_logs/transcripts/" >> /path/to/new-project/.gitignore
 .claude/
 ├── settings.json            # Hook config (Stop + SessionEnd hooks)
 └── hooks/
-    ├── save-planning-logs.sh
-    └── debug-hook-input.sh  # Optional: for debugging hook inputs
+    └── save-planning-logs.sh
 
 # Cursor
 ~/.cursor/plans/             # Cursor's global plans (default)

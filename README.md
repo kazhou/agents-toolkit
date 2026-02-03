@@ -18,6 +18,7 @@ This is a work in progress!
   - `/fix-issue [number]` - Implement a GitHub issue using TDD
 - [Planning Session Logger](#planning-session-logger): automatically saves planning mode transcripts and plan files
 - [Documentation Reminder Hook (CC)](#documentation-hook-for-cc): doc-reminder hook for Write/Edit  
+- **Claude Code Notifications** - get notified when Claude needs input
 
 ---
 
@@ -212,7 +213,30 @@ Key frontmatter options:
 
 See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full reference.
 
+
+
+## Claude Code Notifications
+Add to `.claude/settings.json`:
+```
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 ---
+
+
 
 # Agent-specific Resources
 
@@ -221,6 +245,7 @@ See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full r
   - Always save checkpoints (start in clean git state, commit changes, revert if necessary)
   - Starting over often has a higher success rate than trying to fix Claude's mistakes
 - UI design plugin: https://github.com/Dammyjay93/interface-design
+- Security Review for Web Apps Skill: https://github.com/BehiSecc/VibeSec-Skill
 
 ## Cursor
 - [Cursor agents best practices](https://cursor.com/blog/agent-best-practices)

@@ -40,6 +40,8 @@ Guidelines for coding agents
   
 ## Planning
 - Always start a project in Plan Mode. Ask the user for clarification. When in doubt, ask the user.
+  1) Analyze the existing codebase structure, configs, and conventions 
+  2) List every assumption you'd make about ports, file locations, dependencies, and integration points 
 - Always search the web for real API documentation. No need to ask for permission to search the web.
 - Always re-read the codebase before suggesting changes to work on the most up-to-date files. The user may have manually updated code without notifying you.
 - Make sure you understand the structure of datasets before writing code for them
@@ -63,11 +65,19 @@ Guidelines for coding agents
 
 
 # Documentation
-- Update the README.md with file/directory changes
+- Update the README.md with file/directory changes. Ensure code examples match current API. 
 - Briefly document the purpose of each script in the README.md
 - Keep the README.md organized and succinct
 - If there is data, create a `data/README.md`, and describe the general structure of each dataset (what each column/feature is and its format)
 - Try to create separate Markdown files for distinct features, to avoid the main README.md becoming too long. Link these additional files in the main README
+
+
+## Example Notebooks
+- After making changes: 
+  1) Execute any code cells or examples using bash (jupyter nbconvert --execute --inplace for notebooks) 
+  2) Read the output and verify it matches what the documentation claims 
+  3) If outputs show old class names, stale data, or errors, fix the source and re-execute 
+  4) Only report complete when all executable documentation runs clean. Iterate autonomously until everything validates.
 
 
 # Logging

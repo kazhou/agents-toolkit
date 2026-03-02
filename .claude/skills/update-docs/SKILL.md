@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash(git *)
 
 # Documentation Update
 
-Update README.md and agent_logs/LOG.md after completing work.
+Update main README.md, subdirectory READMEs (if applicable), and agent_logs/LOG.md after completing work.
 
 ## Steps
 

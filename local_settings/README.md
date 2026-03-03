@@ -36,8 +36,9 @@ This copies `.claude/` config, `agent_dev/` structure, and `CLAUDE.md` into the 
 Pull toolkit changes into an existing project:
 
 ```bash
-./cc_update_local.sh /path/to/project          # interactive — shows diffs, prompts
-./cc_update_local.sh /path/to/project --force   # apply all without prompting
+./cc_update_local.sh /path/to/project                        # single project
+./cc_update_local.sh /path/to/proj1 /path/to/proj2           # multiple projects
+./cc_update_local.sh --force /path/to/proj1 /path/to/proj2   # skip prompts
 ```
 
 Updates settings, hooks, `agent_dev/CLAUDE.md`, and `draft.sh`. Does **not** touch project-specific files (`CLAUDE.md`, `agent_dev/README.md`, `LOG.md`).

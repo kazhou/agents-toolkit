@@ -120,7 +120,7 @@ Claude Code will call Codex via the MCP tool, passing your prompt and repo conte
 3. Update existing installs after pulling toolkit changes:
    ```bash
    ./global_settings/cc_update_global.sh           # update ~/.claude/
-   ./local_settings/cc_update_local.sh /path/to/project  # update a project
+   ./local_settings/cc_update_local.sh /path/to/proj1 /path/to/proj2  # update project(s)
    ```
    Both show diffs and prompt before overwriting. Use `--force` to skip prompts.
 

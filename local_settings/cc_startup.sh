@@ -42,7 +42,7 @@ GITIGNORE="$TARGET/.gitignore"
 touch "$GITIGNORE"
 
 # Only append if not already present
-for pattern in "agent_dev/transcripts/" "agent_dev/archived/" "agent_dev/drafting/"; do
+for pattern in "agent_dev/transcripts/" "agent_dev/archived/" "agent_dev/drafting/" "agent_dev/agent_docs/"; do
     if ! grep -qF "$pattern" "$GITIGNORE" 2>/dev/null; then
         echo "$pattern" >> "$GITIGNORE"
     fi

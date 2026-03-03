@@ -14,6 +14,10 @@ local_settings/
     settings.json        ← project Claude Code settings + hook config
     hooks/
       save-transcript.sh ← auto-save session transcripts on session end
+  agent_docs/            ← optional guidelines to include in CLAUDE.md per project need
+    git-dev.md           ← branch strategy (dev-based workflow, PR conventions)
+    jupyter_notebook.md  ← notebook execution & validation rules
+    testing.md           ← TDD conventions
   agent_dev/             ← development workflow structure (see agent_dev/README.md)
   notebooks/
     CLAUDE.md            ← notebook-specific agent guidelines

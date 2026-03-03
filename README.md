@@ -33,27 +33,28 @@ local_settings/          ← per-project template
 
 ## Workflow
 
-- **Brainstorm** — the WHAT and WHY. No code beyond discussion of frameworks/architectures, trade-offs, and final decisions. Start in `drafting/` (create docs with `agent_dev/draft.sh [name]`), user and CC whiteboard together. When something solidifies, CC appends a dated note to `agent_dev/README.md # Insights`.
-  - use `draft.sh [name]` to create `YY-MM-DD_name.md`
-- **Plan** — when draft is solid, CC (+user) writes the HOW in `active/YY-MM-DD_{name}.md` (structured, high-level impl, no code samples, todo list at bottom). CC then enters Plan Mode to write implementation details. Plan filename gets appended to active doc's `# Plans` section.
-  - Claude Code plans are saved in `proj/.claude/plans` instead of `~/.claude/plans` 
-  - Transcript auto-copied to `agent_dev/transcripts/` on ExitPlanMode
-- **Execute** — CC works off the plan, TDD, frequent commits. 
-  - **Handoff** — manual precompaction, `/handoff` when context runs low. Checks off completed todos in active doc, enters Plan Mode to summarize done and remaining TODOs. User accepts and runs `/clear`.
-- **Complete** — commit and PR, update `agent_dev/LOG.md` with concise summary.
-  - **Review** — `/review-insights` surfaces all `# Insights` sections across CLAUDE.md files for human review. Completed active docs manually moved to `archived/`.
+- **Brainstorm** — explore the WHAT and WHY. User + CC whiteboard freely in `drafting/` docs (`draft.sh [name]` to create). No code, only frameworks, trade-offs, and decisions. A single brainstorm may produce multiple active plans.
+  - Surface broader goals/decisions to `agent_dev/README.md # Insights`
+- **Plan** — turn a solid draft into one or more active plans in `active/`. Each active plan covers a single shippable scope — if something can ship independently, it gets its own plan. Tasks are tagged for parallelism (`[parallel]`, `[depends: X]`) and scoped to specific files/dirs. Plans include boundaries (what not to touch) and a blocked section for unresolved questions.
+  - CC enters Plan Mode based on these finalized docs
+  - Claude Code plans saved in `proj/.claude/plans`
+  - Transcripts auto-copied to `agent_dev/transcripts/` on ExitPlanMode
+- **Execute** — agents work off the plan. Parallel tasks run in separate worktrees for isolation. When an agent hits ambiguity, it documents the question in `# Blocked` and moves on to other tasks instead of guessing or stalling.
+  - **Handoff** — `/handoff` when context runs low. Checks off completed todos, summarizes remaining work. Can also be triggered as a manual pre-compaction by user.
+- **Complete** — one PR per active plan. Agent writes the PR description (what was built, key decisions, what was not touched). Agent updates `agent_dev/LOG.md`.
+  - **Review** — `/review-insights` surfaces `# Insights` across CLAUDE.md files. Completed active docs moved to `archived/`.
 
 ```
 agent_dev/
   README.md              ← vision, priorities, # Insights
-  CLAUDE.md              ← workflow instructions
+  CLAUDE.md              ← workflow instructions (machine-readable task format)
   LOG.md                 ← agent summaries after task completion
   draft.sh               ← create drafting docs from terminal
   agent_docs/            ← optional guidelines (gitignored, include in CLAUDE.md per project need)
   drafting/
     YY-MM-DD_{name}.md
   active/
-    YY-MM-DD_{name}.md   ← plan + # Plans + todo
+    YY-MM-DD_{name}.md   ← plan, # Boundaries, # Tasks, # Blocked, # Plans
   transcripts/
     YY-MM-DD_{name}.md
   archived/

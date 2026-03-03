@@ -206,10 +206,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Agent dev - local-only directories
-agent_dev/transcripts/
-agent_dev/archived/
-agent_dev/drafting/
+# Agent dev - local-only (templates live in local_settings/agent_dev/)
+agent_dev/
 
 
 .vscode/
@@ -217,6 +215,3 @@ agent_dev/drafting/
 .cursor/
 
 old/
-
-agent_dev/transcripts/
-agent_dev/archived/

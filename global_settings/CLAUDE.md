@@ -17,10 +17,10 @@
 - Only use `try/except` when there is a specific reason to handle them. Let unexpected errors surface.
 
 ## Testing (TDD)
+- Skip tests unless the function has real edge cases, error paths, or integration risk. Default is no test.
 - Before writing a test, ask: what specific bug does this catch? If you can't answer, skip it.
-- Prioritize edge cases, error handling, and integration points. Skip happy-path tests for trivial functions.
 - Each test verifies exactly one behavior. Name it after the behavior, not the function.
-- Write tests first (RED), commit them, confirm they fail (show failing test output), then implement (GREEN), then refactor.
+-  Write tests first (RED), commit them, confirm they fail (show failing test output), then implement (GREEN), then refactor.
 - No mocks for unwritten code — use fixtures based on real inputs/outputs.
 
 ## Debugging

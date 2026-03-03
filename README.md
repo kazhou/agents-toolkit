@@ -1,273 +1,125 @@
 # agents-toolkit
 
-Repo for various coding agents scripts, guidelines, and tools. To copy into/reuse in projects.
+Toolkit for coding agent workflows — scripts, guidelines, skills, and hooks. Copy into or reuse across projects.
 
-This is a work in progress!
+Work in progress!
 
-# Contents
-
-- **Agent Guidelines**
-  - [AGENTS.md](AGENTS.md): Cross-platform guidelines for coding agents (Cursor, Copilot, Codex, etc.)
-  - [CLAUDE.md](CLAUDE.md): Claude Code-specific version with additional CC features (compaction preservation, skill references)
-  - Setup:
-    - Claude Code: Already uses `CLAUDE.md` automatically (project-level)
-    - Cursor: `cp AGENTS.md ~/.cursor/rules/`
-    - Global Claude Code: `cp CLAUDE.md ~/.claude/CLAUDE.md`
-- **Claude Code Skills** (see [Skills section](#claude-code-skills))
-  - `/update-docs` - Update README and LOG.md after completing work
-  - `/fix-issue [number]` - Implement a GitHub issue using TDD
-- [Planning Session Logger](#planning-session-logger): automatically saves planning mode transcripts and plan files
-- [Documentation Reminder Hook (CC)](#documentation-hook-for-cc): doc-reminder hook for Write/Edit
-- **Claude Code Notifications** - get notified when Claude needs input
-
----
-
-
-## Planning Session Logger
-
-Automatically saves planning session transcripts and plan files to `agent_logs/` when exiting plan mode. Supports both **Claude Code** and **Cursor**.
-
-### Features
-
-- Plan files copied to `agent_logs/plans/YYYY-MM-DD-<agent>-<heading-name>.md`
-- Original plan stays in agent's default location for re-editing
-- JSONL transcripts cleaned to readable text
-- Auto-commits saved plans to git (not transcripts, in case of sensitive info)
-- Re-entering plan mode allows editing the same plan
-
-### File Naming Convention
-
-Files include the agent name for easy identification:
-- Plans: `YYYY-MM-DD-<agent>-<plan-name>.md`
-- Transcripts: `YYYY-MM-DD-<agent>-<plan-name>.transcript.txt`
-
-Examples:
-- `2026-01-27-claude-add-authentication.md`
-- `2026-01-27-cursor-refactor-api.md`
-
-### Setup for New Projects
-
-Copy agent config directories and create the agent_logs structure:
-
-```bash
-# For Claude Code
-cp -r .claude/ /path/to/new-project/
-
-# For Cursor
-cp -r .cursor/ /path/to/new-project/
-
-# Create agent_logs structure
-mkdir -p /path/to/new-project/agent_logs/{plans,transcripts}
-
-# Add transcripts to .gitignore (may contain sensitive info)
-echo "agent_logs/transcripts/" >> /path/to/new-project/.gitignore
-```
-
-### Directory Structure
+## Contents
 
 ```
-# Claude Code
-~/.claude/plans/             # CC's default location (editable originals)
-.claude/
-├── settings.json            # Hook config (Stop + SessionEnd hooks)
-└── hooks/
-    └── save-planning-logs.sh
+global_settings/         ← shared across all projects
+  CLAUDE.md              ← global agent guidelines
+  claude/                ← copy into ~/.claude/
+    settings.json        ← global Claude Code settings
+    skills/              ← global skills (/draft, /handoff, /review-insights, /update-docs, /update-claudes)
+  codex/
+    codex_prompt.json    ← Codex agent prompt config
 
-# Cursor
-~/.cursor/plans/             # Cursor's global plans (default)
-.cursor/plans/               # Workspace plans (after "Save to workspace")
-.cursor/
-├── hooks.json               # Hook config (afterFileEdit + sessionEnd)
-└── hooks/
-    └── save-planning-logs-cursor.sh
-
-# Shared output
-agent_logs/
-├── plans/           # YYYY-MM-DD-<agent>-<plan-name>.md (tracked in git)
-└── transcripts/     # YYYY-MM-DD-<agent>-<plan-name>.transcript.txt (gitignored)
-```
-
-### How It Works
-
-#### Claude Code
-1. CC creates/edits plans in `~/.claude/plans/`
-2. When you approve a plan, hooks trigger based on approval type:
-   - **Accept edits**: `Stop` hook fires when Claude finishes responding
-   - **Clear context**: `SessionEnd` hook fires with `reason: "clear"`
-3. Hook parses the session transcript to find `ExitPlanMode` tool call
-4. Hook **copies** plan content to `agent_logs/plans/` with dated name (using first `# Heading`)
-5. Hook cleans the JSONL transcript to readable text
-6. Plan file is auto-committed to git (transcripts are gitignored)
-
-**Supported workflows:**
-- `/plan` command
-- Shift+Tab to enter plan mode mid-session
-- Both "accept edits" and "clear context" approval options
-
-#### Cursor (not tested yet)
-1. Cursor creates plans in `~/.cursor/plans/` (global) or `.cursor/plans/` (workspace)
-2. Hooks trigger on:
-   - `afterFileEdit` - when plan is saved to workspace (`.cursor/plans/`)
-   - `sessionEnd` - fallback for plans in global directory (`~/.cursor/plans/`)
-3. Hook **copies** plan file to `agent_logs/plans/` with dated name
-4. Hook cleans the transcript (using `transcript_path` from Cursor)
-5. Both files are auto-committed to git
-
-**Note:** For best results with Cursor, click "Save to workspace" when creating plans. This triggers the `afterFileEdit` hook immediately. Plans saved only to the global directory will be captured when the session ends.
-
-### Toggle Hooks
-
-To enable/disable Cursor hooks:
-
-```bash
-.cursor/toggle-hooks.sh          # Toggle current state
-.cursor/toggle-hooks.sh on       # Enable hooks
-.cursor/toggle-hooks.sh off      # Disable hooks
-.cursor/toggle-hooks.sh status   # Show current state
-```
-
-This renames `hooks.json` to `hooks.json.disabled` (and vice versa).
-
-
-## Documentation Hook for CC
-
-Add to `~/.claude/settings.json` (global) or `.claude/settings.json` (local)
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo 'Remember: Update agent_logs/LOG.md and README.md if needed'",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  }
-}    
+local_settings/          ← per-project template
+  CLAUDE.md              ← project-level agent guidelines
+  cc_startup.sh          ← setup script for new projects
+  claude/                ← copy into proj/.claude/
+    settings.json        ← project settings + hooks
+    hooks/
+      save-transcript.sh ← auto-save session transcripts
+  agent_docs/            ← optional guidelines (include in CLAUDE.md per project need)
+  agent_dev/             ← development workflow structure (see below)
+  notebooks/             ← notebook-specific agent guidelines
+  tests/                 ← test-specific agent guidelines
 ```
 
 ---
 
-## Claude Code Skills
+## Workflow
 
-Custom skills for Claude Code workflows. Skills are invoked with `/skill-name` in the chat.
+- **Brainstorm** — the WHAT and WHY. No code beyond discussion of frameworks/architectures, trade-offs, and final decisions. Start in `drafting/`, user and CC whiteboard together. When something solidifies, CC appends a dated note to `agent_dev/README.md # Insights`.
+- **Plan** — when draft is solid, CC (+user) writes the HOW in `active/YY-MM-DD_{name}.md` (structured, high-level impl, no code samples, todo list at bottom). CC then enters Plan Mode to write implementation details. Plan filename gets appended to active doc's `# Plans` section.
+  - Claude Code plans are saved in `proj/.claude/plans` instead of `~/.claude/plans` 
+  - Transcript auto-copied to `agent_dev/transcripts/` on ExitPlanMode
+- **Execute** — CC works off the plan, TDD, frequent commits. 
+- **Handoff** — `/handoff` when context runs low. Checks off completed todos in active doc, enters Plan Mode to summarize done and remaining TODOs. User accepts and runs `/clear`.
+- **Complete** — commit and PR, update `agent_dev/LOG.md` with concise summary.
+  - **Review** — `/review-insights` surfaces all `# Insights` sections across CLAUDE.md files for human review. Completed active docs manually moved to `archived/`.
 
-### Available Skills
-
-| Skill | Description | Usage |
-|-------|-------------|-------|
-| `/update-docs` | Update documentation after completing work | `/update-docs` |
-| `/fix-issue` | Implement a GitHub issue using TDD | `/fix-issue 123` |
-
-### Setup for New Projects
-
-Copy the skills directory to your project:
-
-```bash
-cp -r .claude/skills/ /path/to/new-project/.claude/skills/
+```
+agent_dev/
+  README.md              ← vision, priorities, # Insights
+  CLAUDE.md              ← workflow instructions
+  LOG.md                 ← agent summaries after task completion
+  drafting/
+    YY-MM-DD_{name}.md
+  active/
+    YY-MM-DD_{name}.md   ← plan + # Plans + todo
+  transcripts/
+    YY-MM-DD_{name}.md
+  archived/
 ```
 
-Or copy to personal directory for use across all projects:
+### Automation
 
-```bash
-cp -r .claude/skills/* ~/.claude/skills/
-```
+**Hooks**
+- `save-transcript.sh` — copies + cleans session transcript to `agent_dev/transcripts/` on session end
+- **Python format+lint** — runs `ruff format` + `ruff check --fix` on `.py` files after Write/Edit (via `uv run`)
+- **JS/TS format** — runs `prettier --write` on `.js/.ts/.jsx/.tsx` files after Write/Edit
+- **JS/TS lint** — runs `eslint --fix` on `.js/.ts/.jsx/.tsx` files after Write/Edit
 
-### Skill Details
+> **Dev dependencies for target projects:** Python projects need `uv add --dev ruff`; TS/React projects need `npm install --save-dev eslint`. Hooks use `|| true` so missing tools never block Claude.
 
-#### `/update-docs`
+**Skills** (global — `~/.claude/skills/`)
 
-Updates README.md and agent_logs/LOG.md after completing work:
-1. Shows recent git changes (`git diff HEAD~5 --stat`)
-2. Prepends session summary to agent_logs/LOG.md
-3. Updates README.md if functionality changed
-4. Commits documentation changes
+| Skill | Description |
+|-------|-------------|
+| `/draft [name]` | Create a new drafting doc in `agent_dev/drafting/` and start brainstorming |
+| `/handoff [active-doc]` | Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
+| `/review-insights` | Scan all CLAUDE.md + agent_dev/README.md `# Insights` sections for review |
+| `/update-docs [path]` | Recursively update all README.md files to reflect current codebase state |
+| `/update-claudes [path]` | Recursively update all CLAUDE.md files for accuracy (preserves `# Insights`) |
 
-#### `/fix-issue [number]`
-
-Implements a GitHub issue using Test-Driven Development:
-1. Fetches issue details from GitHub (`gh issue view`)
-2. Creates feature branch (`feature/<issue-number>`)
-3. Writes tests first (TDD) - confirms they fail
-4. Implements the fix to pass tests
-5. Updates documentation
-6. Creates PR (`gh pr create --fill`)
-
-### Creating Custom Skills
-
-Skills live in `.claude/skills/<name>/SKILL.md`:
-
-```yaml
----
-name: my-skill
-description: What it does and when to use it
-disable-model-invocation: true  # Only manual /my-skill invocation
-allowed-tools: Read, Write, Edit, Bash(git *)
 ---
 
-# Instructions for Claude to follow...
-```
+## Setup for New Projects
 
-Key frontmatter options:
-- `disable-model-invocation: true` - Prevents auto-invocation; requires `/skill-name`
-- `allowed-tools` - Tools Claude can use without permission prompts
-- `argument-hint` - Shows in autocomplete (e.g., `[issue-number]`)
+1. Copy global settings (once):
+   ```bash
+   cp global_settings/CLAUDE.md ~/.claude/CLAUDE.md
+   cp global_settings/claude/settings.json ~/.claude/settings.json
+   cp -r global_settings/claude/skills/* ~/.claude/skills/
+   ```
 
-See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full reference.
+2. Initialize a project:
+   ```bash
+   ./local_settings/cc_startup.sh /path/to/project
+   ```
+   This copies `.claude/` config, `agent_dev/` structure, and `CLAUDE.md` into the target project.
 
+---
 
+# Misc
 
-## Claude Code Notifications
- Note: this doesn't seem to work in VSCode/Cursor https://github.com/anthropics/claude-code/issues/11156
+`uv activate` shortcut for `source .venv/bin/activate` in a project.
 
-Add to `.claude/settings.json`: 
+Add to `~/.{bash,zsh}rc`:
 
-Mac:
-```
-{
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
-          }
-        ]
-      }
-    ]
-  }
+```shell
+uv() {
+    if [ "$1" = "activate" ]; then
+        dir="$PWD"
+        while [ "$dir" != "/" ]; do
+            if [ -d "$dir/.venv" ]; then
+                source "$dir/.venv/bin/activate"
+                echo "Activated .venv in $dir"
+                return
+            fi
+            dir=$(dirname "$dir")
+        done
+        echo "No .venv folder found in current or parent directories."
+    else
+        command uv "$@"
+    fi
 }
 ```
 
-Linux:
-```
-{
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "notify-send 'Claude Code' 'Claude Code needs your attention'"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
 ---
-
-
 
 # Agent-specific Resources
 
@@ -277,6 +129,7 @@ Linux:
   - Starting over often has a higher success rate than trying to fix Claude's mistakes
 - UI design plugin: https://github.com/Dammyjay93/interface-design
 - Security Review for Web Apps Skill: https://github.com/BehiSecc/VibeSec-Skill
+- https://impeccable.style/ - Design fluency for AI coding tools
 
 ## Cursor
 - [Cursor agents best practices](https://cursor.com/blog/agent-best-practices)
@@ -287,8 +140,3 @@ Linux:
   - When you start a new conversation, use @Past Chats to reference previous work rather than copy-pasting the whole conversation.
   - Create rules as markdown files in `.cursor/rules/`
     - Keep rules focused on the essentials: the commands to run, the patterns to follow, and pointers to canonical examples in your codebase. Reference files instead of copying their contents; this keeps rules short and prevents them from becoming stale as code changes.
-  - Skills are defined in SKILL.md files and can include:
-    - Custom commands: Reusable workflows triggered with / in the agent input
-    - Hooks: Scripts that run before or after agent actions
-    - Domain knowledge: Instructions for specific tasks the agent can pull in on demand
-  - The agent can process images directly from your prompts. Paste screenshots, drag in design files, or reference image paths.

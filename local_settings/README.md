@@ -18,7 +18,7 @@ local_settings/
     git-dev.md           ← branch strategy (dev-based workflow, PR conventions)
     jupyter_notebook.md  ← notebook execution & validation rules
     testing.md           ← TDD conventions
-  agent_dev/             ← development workflow structure (see agent_dev/README.md)
+  agent_dev/             ← development workflow structure (see ../README.md)
   notebooks/
     CLAUDE.md            ← notebook-specific agent guidelines
   tests/

@@ -11,15 +11,11 @@
 ```
 agent_dev/
   README.md              ← vision, priorities, # Insights
-  CLAUDE.md              ← workflow instructions (this file)
   LOG.md                 ← reverse-chronological agent session updates
   drafting/              → freeform, no restrictions
     YY-MM-DD_{name}.md
   active/                → high-level only, no code samples
     YY-MM-DD_{name}.md   ← plan, # Plans links to .claude/plans, todo
-  transcripts/           → auto-saved, gitignored
-    YY-MM-DD_{name}.txt
-  archived/              → completed active docs
 ```
 
 ## File Rules

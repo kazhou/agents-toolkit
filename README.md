@@ -57,6 +57,11 @@ agent_dev/
 
 **Hooks**
 - `save-transcript.sh` — copies + cleans session transcript to `agent_dev/transcripts/` on session end
+- **Python format+lint** — runs `ruff format` + `ruff check --fix` on `.py` files after Write/Edit (via `uv run`)
+- **JS/TS format** — runs `prettier --write` on `.js/.ts/.jsx/.tsx` files after Write/Edit
+- **JS/TS lint** — runs `eslint --fix` on `.js/.ts/.jsx/.tsx` files after Write/Edit
+
+> **Dev dependencies for target projects:** Python projects need `uv add --dev ruff`; TS/React projects need `npm install --save-dev eslint`. Hooks use `|| true` so missing tools never block Claude.
 
 **Skills** (global — `~/.claude/skills/`)
 
@@ -84,22 +89,6 @@ agent_dev/
    ./local_settings/cc_startup.sh /path/to/project
    ```
    This copies `.claude/` config, `agent_dev/` structure, and `CLAUDE.md` into the target project.
-
-### Creating Custom Skills
-
-Skills live in `.claude/skills/<name>/SKILL.md`:
-
-```yaml
----
-name: my-skill
-description: What it does and when to use it
-disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Bash(git *)
----
-# Instructions for Claude to follow...
-```
-
-See [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) for full reference.
 
 ---
 
@@ -138,6 +127,7 @@ uv() {
   - Starting over often has a higher success rate than trying to fix Claude's mistakes
 - UI design plugin: https://github.com/Dammyjay93/interface-design
 - Security Review for Web Apps Skill: https://github.com/BehiSecc/VibeSec-Skill
+- https://impeccable.style/ - Design fluency for AI coding tools
 
 ## Cursor
 - [Cursor agents best practices](https://cursor.com/blog/agent-best-practices)

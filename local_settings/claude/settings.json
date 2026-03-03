@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "file=\"$CLAUDE_FILE_PATHS\"; [[ \"$file\" == *.py ]] && black --quiet \"$file\" && isort --quiet \"$file\" || true"
+            "command": "file=\"$CLAUDE_FILE_PATHS\"; [[ \"$file\" == *.py ]] && uv run ruff format --quiet \"$file\" && uv run ruff check --fix --quiet \"$file\" || true"
           }
         ]
       },
@@ -29,6 +29,15 @@
           {
             "type": "command",
             "command": "file=\"$CLAUDE_FILE_PATHS\"; [[ \"$file\" == *.js || \"$file\" == *.ts || \"$file\" == *.jsx || \"$file\" == *.tsx ]] && npx prettier --write \"$file\" || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATHS\"; [[ \"$file\" == *.js || \"$file\" == *.ts || \"$file\" == *.jsx || \"$file\" == *.tsx ]] && npx eslint --fix \"$file\" 2>/dev/null || true"
           }
         ]
       }

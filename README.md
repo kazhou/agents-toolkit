@@ -45,6 +45,7 @@ agent_dev/
   README.md              ← vision, priorities, # Insights
   CLAUDE.md              ← workflow instructions
   LOG.md                 ← agent summaries after task completion
+  draft.sh               ← create drafting docs from terminal (alternative to /draft skill)
   agent_docs/            ← optional guidelines (gitignored, include in CLAUDE.md per project need)
   drafting/
     YY-MM-DD_{name}.md
@@ -69,7 +70,7 @@ agent_dev/
 
 | Skill | Description |
 |-------|-------------|
-| `/draft [name]` | Create a new drafting doc in `agent_dev/drafting/` and start brainstorming |
+| `/draft [name]` | Create a new drafting doc in `agent_dev/drafting/` and start brainstorming. For instant creation from terminal, use `agent_dev/draft.sh [name]` instead |
 | `/handoff [active-doc]` | Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
 | `/review-insights` | Scan all CLAUDE.md + agent_dev/README.md `# Insights` sections for review |
 | `/update-docs [path]` | Recursively update all README.md files to reflect current codebase state |

@@ -10,6 +10,7 @@ Use `cc_startup.sh` to copy into a new project.
 local_settings/
   CLAUDE.md              ← project-level agent guidelines template
   cc_startup.sh          ← setup script: copies config into target project
+  cc_update_local.sh     ← pull toolkit updates into existing project
   claude/
     settings.json        ← project Claude Code settings + hook config
     hooks/
@@ -29,5 +30,16 @@ local_settings/
 ```
 
 This copies `.claude/` config, `agent_dev/` structure, and `CLAUDE.md` into the target project.
+
+## Update
+
+Pull toolkit changes into an existing project:
+
+```bash
+./cc_update_local.sh /path/to/project          # interactive — shows diffs, prompts
+./cc_update_local.sh /path/to/project --force   # apply all without prompting
+```
+
+Updates settings, hooks, `agent_dev/CLAUDE.md`, and `draft.sh`. Does **not** touch project-specific files (`CLAUDE.md`, `agent_dev/README.md`, `LOG.md`).
 
 See [root README](../README.md) for full setup instructions.

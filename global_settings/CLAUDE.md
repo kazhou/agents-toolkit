@@ -5,7 +5,8 @@
 - Install: `uv add <pkg>`. Dev: `uv add --dev <pkg>`. Sync: `uv sync`.
 
 ## Git
-- New branch per feature. Commit after each step, with short descriptive messages.
+- Work in `dev` branch, NEVER work directly in `main`.
+- New branch off `dev` per major refactor or update. Commit after each step, with short descriptive messages.
 - When a task is done, tell the user which branch to make a PR for.
 
 ## Code
@@ -18,13 +19,13 @@
 
 ## Documentation
 - Use pointers/links over duplication. Keep a single source of truth without redundancy.
-- Keep READMEs concise. Maintain markdown files for subdirectories and distinct features, with pointers from the main README
-
-## Plotting
-- Use `seaborn` with "ticks" style, "pastel" color palette, tight layout, and `font_scale` = 1.5
+- Keep READMEs concise. Maintain markdown files for subdirectories and distinct features, with pointers to/from the main README
 
 ## Plan Mode
 - Plans should point to location of existing code (`file:line`) instead of copying said code into the plan document.
+- Prefer simple, direct solutions. Add complexity only when simpler approaches genuinely won't work.
+
+## 
 
 ## On Compaction
 Preserve: modified files list, current task, next steps, failing tests

@@ -9,6 +9,7 @@ Work in progress!
 ```
 global_settings/         ← shared across all projects
   CLAUDE.md              ← global agent guidelines
+  cc_update_global.sh    ← pull toolkit updates into ~/.claude/
   claude/                ← copy into ~/.claude/
     settings.json        ← global Claude Code settings
     skills/              ← global skills (/handoff, /review-insights, /update-docs, /update-claudes)
@@ -18,6 +19,7 @@ global_settings/         ← shared across all projects
 local_settings/          ← per-project template
   CLAUDE.md              ← project-level agent guidelines
   cc_startup.sh          ← setup script for new projects
+  cc_update_local.sh     ← pull toolkit updates into existing projects
   claude/                ← copy into proj/.claude/
     settings.json        ← project settings + hooks
     hooks/
@@ -37,7 +39,7 @@ local_settings/          ← per-project template
   - Claude Code plans are saved in `proj/.claude/plans` instead of `~/.claude/plans` 
   - Transcript auto-copied to `agent_dev/transcripts/` on ExitPlanMode
 - **Execute** — CC works off the plan, TDD, frequent commits. 
-- **Handoff** — `/handoff` when context runs low. Checks off completed todos in active doc, enters Plan Mode to summarize done and remaining TODOs. User accepts and runs `/clear`.
+  - **Handoff** — manual precompaction, `/handoff` when context runs low. Checks off completed todos in active doc, enters Plan Mode to summarize done and remaining TODOs. User accepts and runs `/clear`.
 - **Complete** — commit and PR, update `agent_dev/LOG.md` with concise summary.
   - **Review** — `/review-insights` surfaces all `# Insights` sections across CLAUDE.md files for human review. Completed active docs manually moved to `archived/`.
 
@@ -114,6 +116,13 @@ Claude Code will call Codex via the MCP tool, passing your prompt and repo conte
    ./local_settings/cc_startup.sh /path/to/project
    ```
    This copies `.claude/` config, `agent_dev/` structure, and `CLAUDE.md` into the target project.
+
+3. Update existing installs after pulling toolkit changes:
+   ```bash
+   ./global_settings/cc_update_global.sh           # update ~/.claude/
+   ./local_settings/cc_update_local.sh /path/to/project  # update a project
+   ```
+   Both show diffs and prompt before overwriting. Use `--force` to skip prompts.
 
 ---
 

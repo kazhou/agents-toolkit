@@ -20,7 +20,7 @@ agent_dev/
   active/                → high-level only, no code samples
     YY-MM-DD_{name}.md   ← plan, # Plans links to .claude/plans, todo
   transcripts/           → auto-saved, gitignored
-    YY-MM-DD_{name}.jsonl
+    YY-MM-DD_{name}.txt
   archived/              → completed active docs
 ```
 

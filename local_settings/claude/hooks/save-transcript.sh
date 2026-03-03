@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# save-transcript.sh - Save session transcript as cleaned JSONL
+# save-transcript.sh - Save session transcript as cleaned text
 #
 # Triggered by SessionEnd hook
 # Reads transcript path from hook stdin JSON
-# Cleans JSONL: strips ANSI/control chars from all string values
-# Saves to agent_dev/transcripts/YY-MM-DD_{name}.jsonl
+# Converts JSONL transcript to readable text with tool call annotations
+# Saves to agent_dev/transcripts/YY-MM-DD_{name}.txt
 #
 # Naming: plan slug from Write tool calls to .claude/plans/, else session_id[:8]
 # Portable: uses $CLAUDE_PROJECT_DIR for all paths
@@ -41,7 +41,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-# Patterns for cleaning string values
+# Patterns for cleaning
 ANSI_RE = re.compile(r'\x1b\[[0-9;]*[a-zA-Z]')
 CTRL_RE = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
 
@@ -54,17 +54,6 @@ def clean_string(s):
     s = ANSI_RE.sub('', s)
     s = CTRL_RE.sub('', s)
     return s
-
-
-def clean_value(obj):
-    """Recursively clean all string values in a JSON-compatible structure."""
-    if isinstance(obj, str):
-        return clean_string(obj)
-    if isinstance(obj, list):
-        return [clean_value(item) for item in obj]
-    if isinstance(obj, dict):
-        return {k: clean_value(v) for k, v in obj.items()}
-    return obj
 
 
 def extract_plan_slug(lines):
@@ -101,29 +90,85 @@ def get_name(raw_lines, hook_data):
     return datetime.now().strftime('%H%M%S')
 
 
+def format_tool_use(block):
+    """Format a tool_use block as a readable annotation."""
+    name = block.get('name', 'unknown')
+    inp = block.get('input', {})
+    # Show key details depending on tool type
+    if name in ('Read', 'Write', 'Edit', 'Glob', 'Grep'):
+        path = inp.get('file_path', inp.get('path', inp.get('pattern', '')))
+        return f"[Tool: {name} → {path}]" if path else f"[Tool: {name}]"
+    if name == 'Bash':
+        cmd = inp.get('command', '')
+        if len(cmd) > 120:
+            cmd = cmd[:120] + '...'
+        return f"[Tool: {name} → {cmd}]"
+    if name == 'Agent':
+        desc = inp.get('description', '')
+        return f"[Tool: {name} → {desc}]" if desc else f"[Tool: {name}]"
+    return f"[Tool: {name}]"
+
+
+def format_tool_result(block):
+    """Format a tool_result block as a readable annotation."""
+    content = block.get('content', '')
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict) and item.get('type') == 'text':
+                parts.append(item.get('text', ''))
+        content = '\n'.join(parts)
+    if isinstance(content, str):
+        content = clean_string(content)
+        if len(content) > 300:
+            content = content[:300] + '...'
+        return f"[Result: {content}]"
+    return '[Result]'
+
+
 def clean_transcript(src_path, dest_path):
-    """Read JSONL, clean all string values, write cleaned JSONL."""
+    """Convert JSONL transcript to readable text."""
     src = Path(src_path)
     if not src.exists():
         return False
 
-    raw_lines = src.read_text(errors='replace').splitlines()
-    cleaned = []
-    for line in raw_lines:
-        stripped = line.strip()
-        if not stripped:
+    lines = []
+    for line in src.read_text(errors='replace').splitlines():
+        if not line.strip():
             continue
         try:
-            data = json.loads(stripped)
+            data = json.loads(line)
         except (json.JSONDecodeError, ValueError):
             continue
-        cleaned_data = clean_value(data)
-        cleaned.append(json.dumps(cleaned_data, ensure_ascii=False))
 
-    if not cleaned:
+        msg = data.get('message', {})
+        role = msg.get('role', '')
+        content = msg.get('content', '')
+
+        if isinstance(content, list):
+            text_parts = []
+            for block in content:
+                if isinstance(block, dict):
+                    btype = block.get('type', '')
+                    if btype == 'text':
+                        text_parts.append(block.get('text', ''))
+                    elif btype == 'tool_use':
+                        text_parts.append(format_tool_use(block))
+                    elif btype == 'tool_result':
+                        text_parts.append(format_tool_result(block))
+                elif isinstance(block, str):
+                    text_parts.append(block)
+            content = '\n'.join(text_parts)
+
+        if content and role in ('user', 'assistant'):
+            content = clean_string(content)
+            prefix = 'User: ' if role == 'user' else 'Assistant: '
+            lines.append(f"{prefix}{content}\n")
+
+    if not lines:
         return False
 
-    Path(dest_path).write_text('\n'.join(cleaned) + '\n')
+    Path(dest_path).write_text(''.join(lines))
     return True
 
 
@@ -141,12 +186,11 @@ def main():
     except Exception:
         pass
 
-    # Read raw lines for plan slug extraction before cleaning
     raw_lines = Path(transcript_path).read_text(errors='replace').splitlines()
 
     date_prefix = datetime.now().strftime('%y-%m-%d')
     name = get_name(raw_lines, hook_data)
-    dest_path = Path(transcripts_dir) / f"{date_prefix}_{name}.jsonl"
+    dest_path = Path(transcripts_dir) / f"{date_prefix}_{name}.txt"
 
     if clean_transcript(transcript_path, dest_path):
         print(f"Saved transcript: {dest_path}")

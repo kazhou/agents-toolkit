@@ -11,7 +11,7 @@ global_settings/         ← shared across all projects
   CLAUDE.md              ← global agent guidelines
   claude/                ← copy into ~/.claude/
     settings.json        ← global Claude Code settings
-    skills/              ← global skills (/draft, /handoff, /review-insights, /update-docs, /update-claudes)
+    skills/              ← global skills (/handoff, /review-insights, /update-docs, /update-claudes)
   codex/
     codex_prompt.json    ← Codex agent prompt config
 
@@ -31,7 +31,8 @@ local_settings/          ← per-project template
 
 ## Workflow
 
-- **Brainstorm** — the WHAT and WHY. No code beyond discussion of frameworks/architectures, trade-offs, and final decisions. Start in `drafting/`, user and CC whiteboard together. When something solidifies, CC appends a dated note to `agent_dev/README.md # Insights`.
+- **Brainstorm** — the WHAT and WHY. No code beyond discussion of frameworks/architectures, trade-offs, and final decisions. Start in `drafting/` (create docs with `agent_dev/draft.sh [name]`), user and CC whiteboard together. When something solidifies, CC appends a dated note to `agent_dev/README.md # Insights`.
+  - use `draft.sh [name]` to create `YY-MM-DD_name.md`
 - **Plan** — when draft is solid, CC (+user) writes the HOW in `active/YY-MM-DD_{name}.md` (structured, high-level impl, no code samples, todo list at bottom). CC then enters Plan Mode to write implementation details. Plan filename gets appended to active doc's `# Plans` section.
   - Claude Code plans are saved in `proj/.claude/plans` instead of `~/.claude/plans` 
   - Transcript auto-copied to `agent_dev/transcripts/` on ExitPlanMode
@@ -45,7 +46,7 @@ agent_dev/
   README.md              ← vision, priorities, # Insights
   CLAUDE.md              ← workflow instructions
   LOG.md                 ← agent summaries after task completion
-  draft.sh               ← create drafting docs from terminal (alternative to /draft skill)
+  draft.sh               ← create drafting docs from terminal
   agent_docs/            ← optional guidelines (gitignored, include in CLAUDE.md per project need)
   drafting/
     YY-MM-DD_{name}.md
@@ -70,8 +71,7 @@ agent_dev/
 
 | Skill | Description |
 |-------|-------------|
-| `/draft [name]` | Create a new drafting doc in `agent_dev/drafting/` and start brainstorming. For instant creation from terminal, use `agent_dev/draft.sh [name]` instead |
-| `/handoff [active-doc]` | Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
+| `/handoff [active-doc]` | Manual pre-compaction. Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
 | `/review-insights` | Scan all CLAUDE.md + agent_dev/README.md `# Insights` sections for review |
 | `/update-docs [path]` | Recursively update all README.md files to reflect current codebase state |
 | `/update-claudes [path]` | Recursively update all CLAUDE.md files for accuracy (preserves `# Insights`) |

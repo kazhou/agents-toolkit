@@ -10,7 +10,6 @@ global_settings/
   claude/
     settings.json        ← global Claude Code settings
     skills/              ← global skills
-      draft/             ← /draft [name]
       handoff/           ← /handoff [active-doc]
       review-insights/   ← /review-insights
       update-docs/       ← /update-docs [path]

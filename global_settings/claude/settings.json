@@ -33,5 +33,16 @@
     "code-review@claude-plugins-official": true,
     "github@claude-plugins-official": true
   },
-  "effortLevel": "medium"
+  "effortLevel": "medium",
+  "mcpServers": {
+    "codex": {
+      "type": "stdio",
+      "command": "codex",
+      "args": [
+        "mcp-server",
+        "-c",
+        "sandbox_permissions=[\"disk-full-read-access\"]"
+      ]
+    }
+  }
 }

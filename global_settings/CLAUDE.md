@@ -13,10 +13,12 @@
 - Always search the web for real API documentation. No need to ask for permission to search the web.
 - When writing scripts that process data iteratively, save outputs incrementally (e.g., append to JSONL) so progress can be resumed if the script is cancelled and re-run.
 
+## Debugging
+- No quick fixes. Always diagnose to the root cause and devise proper solutions. Never apply patches or workarounds unless the user explicitly asks.
+
 ## Documentation
 - Use pointers/links over duplication. Keep a single source of truth without redundancy.
 - Keep READMEs concise. Maintain markdown files for subdirectories and distinct features, with pointers from the main README
-
 
 ## Plotting
 - Use `seaborn` with "ticks" style, "pastel" color palette, tight layout, and `font_scale` = 1.5

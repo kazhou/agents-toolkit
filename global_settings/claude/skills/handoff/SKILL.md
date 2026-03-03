@@ -1,6 +1,7 @@
 ---
 name: handoff
 description: Prepare context handoff when running low. Checks off completed todos in active doc, summarizes remaining work in Plan Mode, and prompts user to /clear.
+argument-hint: [active-doc-name]
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash(git *), Bash(find *), Glob, Grep
 ---
@@ -12,8 +13,9 @@ Prepare a clean context handoff for the next session.
 ## Steps
 
 1. **Find the current active doc**
-   - Look in `agent_dev/active/` for `.md` files
-   - If multiple exist, ask the user which one to update
+   - If `$ARGUMENTS` is provided, find the matching doc in `agent_dev/active/` (match by name substring)
+   - Otherwise, look in `agent_dev/active/` for `.md` files
+   - If multiple exist and no argument was given, ask the user which one to update
    - Read it to understand the todo list and plans
 
 2. **Check off completed todos**

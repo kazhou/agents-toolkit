@@ -1,6 +1,7 @@
 ---
 name: update-docs
 description: Recursively update all README.md files to reflect current codebase state. Fixes stale references, adds undocumented files, and verifies internal links.
+argument-hint: [path]
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls *), Bash(find *)
 ---
@@ -20,8 +21,9 @@ READMEs are for humans:
 
 ## Steps
 
-1. **Find all README.md files**
-   - Use Glob to find `**/README.md` in the project
+1. **Find README.md files**
+   - If `$ARGUMENTS` is provided, scope to that directory's README only (e.g., `/update-docs src/` → only `src/README.md`)
+   - Otherwise, use Glob to find all `**/README.md` in the project
    - Exclude `node_modules/`, `.venv/`, `.git/`, `agent_dev/`
 
 2. **Audit each README against its directory**

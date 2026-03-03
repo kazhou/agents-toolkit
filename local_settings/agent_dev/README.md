@@ -5,6 +5,7 @@
 ## Priorities
 1.
 
+## Constraints
 
 # Insights
 <!-- CC appends dated insights here. Append-only. -->

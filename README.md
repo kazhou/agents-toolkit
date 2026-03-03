@@ -11,7 +11,7 @@ global_settings/         ← shared across all projects
   CLAUDE.md              ← global agent guidelines
   claude/                ← copy into ~/.claude/
     settings.json        ← global Claude Code settings
-    skills/              ← global skills (/handoff, /review-insights, /update-docs, /update-claudes)
+    skills/              ← global skills (/draft, /handoff, /review-insights, /update-docs, /update-claudes)
   codex/
     codex_prompt.json    ← Codex agent prompt config
 
@@ -62,10 +62,11 @@ agent_dev/
 
 | Skill | Description |
 |-------|-------------|
-| `/handoff` | Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
+| `/draft [name]` | Create a new drafting doc in `agent_dev/drafting/` and start brainstorming |
+| `/handoff [active-doc]` | Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
 | `/review-insights` | Scan all CLAUDE.md + agent_dev/README.md `# Insights` sections for review |
-| `/update-docs` | Recursively update all README.md files to reflect current codebase state |
-| `/update-claudes` | Recursively update all CLAUDE.md files for accuracy (preserves `# Insights`) |
+| `/update-docs [path]` | Recursively update all README.md files to reflect current codebase state |
+| `/update-claudes [path]` | Recursively update all CLAUDE.md files for accuracy (preserves `# Insights`) |
 
 ---
 

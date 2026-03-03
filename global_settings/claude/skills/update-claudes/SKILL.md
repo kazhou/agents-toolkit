@@ -1,6 +1,7 @@
 ---
 name: update-claudes
 description: Recursively update all CLAUDE.md files for accuracy. Fixes stale paths, commands, and references. Never touches `# Insights` sections.
+argument-hint: [path]
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(ls *), Bash(find *), Bash(cat pyproject.toml), Bash(cat Makefile)
 ---
@@ -17,12 +18,13 @@ CLAUDE.md files are for agents:
 - Conventions to follow
 - `# Insights` section (append-only — never modify)
 
-Keep CLAUDE.md files CONCISE! Avoid over-explaining, and favor pointing to where the necessary information can be found. No code snippets; reference files and line numbers instead.
+Keep CLAUDE.md files CONCISE! Avoid over-explaining, and favor pointing to where the necessary information can be found. No code snippets; reference files and line numbers instead (e.g., `file:line`)
 
 ## Steps
 
-1. **Find all CLAUDE.md files**
-   - Use Glob to find `**/CLAUDE.md` in the project
+1. **Find CLAUDE.md files**
+   - If `$ARGUMENTS` is provided, scope to that directory's CLAUDE.md only (e.g., `/update-claudes src/` → only `src/CLAUDE.md`)
+   - Otherwise, use Glob to find all `**/CLAUDE.md` in the project
    - Exclude `node_modules/`, `.venv/`, `.git/`, `agent_dev/`
    - Also check for `.claude/CLAUDE.md` variants
 

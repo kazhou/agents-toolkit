@@ -1,6 +1,6 @@
 # Global Settings
 
-Shared across all projects — maps to `~/.claude/`.
+Shared across all projects — e.g., lives in `~/.claude/`.
 
 ## Contents
 
@@ -10,12 +10,13 @@ global_settings/
   claude/
     settings.json        ← global Claude Code settings
     skills/              ← global skills
-      handoff/           ← /handoff
+      draft/             ← /draft [name]
+      handoff/           ← /handoff [active-doc]
       review-insights/   ← /review-insights
-      update-docs/       ← /update-docs
-      update-claudes/    ← /update-claudes
+      update-docs/       ← /update-docs [path]
+      update-claudes/    ← /update-claudes [path]
   codex/
-    codex_prompt.json    ← Codex agent prompt config
+    codex_prompt.json    ← Codex system prompt saved for future reference, not related to setup
 ```
 
 ## Setup

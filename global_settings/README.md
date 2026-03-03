@@ -8,4 +8,4 @@ e.g. `~/.claude/`
 - `settings.json`
 - Hooks
 - Skills
-- 
+-

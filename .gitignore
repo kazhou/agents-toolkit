@@ -206,8 +206,10 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Agent logs - transcripts are local only
-agent_logs/transcripts/
+# Agent dev - local-only directories
+agent_dev/transcripts/
+agent_dev/archived/
+agent_dev/drafting/
 
 CLAUDE.md
 AGENTS.md

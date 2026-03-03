@@ -1,1 +1,37 @@
-{ "plansDirectory": "./plans" }
+{
+  "plansDirectory": "./plans",
+  "hooks": {
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/save-transcript.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATHS\"; [[ \"$file\" == *.py ]] && black --quiet \"$file\" && isort --quiet \"$file\" || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATHS\"; [[ \"$file\" == *.js || \"$file\" == *.ts || \"$file\" == *.jsx || \"$file\" == *.tsx ]] && npx prettier --write \"$file\" || true"
+          }
+        ]
+      }
+    ]
+  }
+}

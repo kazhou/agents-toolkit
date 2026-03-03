@@ -1,7 +1,5 @@
 # Local agent settings
 
-
-
 ## Local/ Project (`proj_dir/.claude`)
 
 Use `cc_startup.sh proj_dir` to copy into new project
@@ -11,4 +9,4 @@ Use `cc_startup.sh proj_dir` to copy into new project
 - `settings.local.json`
 - Hooks
 - Skills
-- 
+-

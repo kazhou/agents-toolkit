@@ -2,7 +2,7 @@
 #
 # save-transcript.sh - Save session transcript as cleaned text
 #
-# Triggered by SessionEnd hook
+# Triggered by PostToolUse hook on ExitPlanMode
 # Reads transcript path from hook stdin JSON
 # Converts JSONL transcript to readable text with tool call annotations
 # Saves to agent_dev/transcripts/YY-MM-DD_{name}.txt

@@ -16,7 +16,7 @@ Today's date: !`date +%y-%m-%d`
 
 1. **Determine the name**
    - If `$ARGUMENTS` is provided, use it as the slug (lowercase, hyphens or underscores)
-   - Otherwise, ask the user what they want to brainstorm
+   - Otherwise, slug is `draft`
 
 2. **Check for collisions**
    - Glob `agent_dev/drafting/*` to see existing docs
@@ -34,6 +34,4 @@ Today's date: !`date +%y-%m-%d`
    ```
 
 4. **Start brainstorming**
-   - Tell the user the file is created
-   - Begin the brainstorm phase: freeform discussion of WHAT and WHY
-   - No code beyond discussion of frameworks, architectures, and trade-offs
+   - Tell the user the file is created. Await further instruction.

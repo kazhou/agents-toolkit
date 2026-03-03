@@ -23,9 +23,13 @@
 ## Plotting
 - Use `seaborn` with "ticks" style, "pastel" color palette, tight layout, and `font_scale` = 1.5
 
+## Plan Mode
+- Plans should point to location of existing code (`file:line`) instead of copying said code into the plan document.
+
 ## On Compaction
 Preserve: modified files list, current task, next steps, failing tests
 
 ## On Completion
-- re-run tests and ensure they pass. Update `agent_dev/LOG.md` with concise summary.
+- Update `agent_dev/LOG.md` with concise summary.
+- if there are tests, re-run tests and ensure they pass. 
 - run skill `/update-docs` to update project README files and skill `/update-claudes` to update project CLAUDE.md files

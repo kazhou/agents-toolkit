@@ -1,9 +1,9 @@
 {
-  "plansDirectory": "./plans",
+  "plansDirectory": ".claude/plans",
   "hooks": {
-    "SessionEnd": [
+    "PostToolUse": [
       {
-        "matcher": "",
+        "matcher": "ExitPlanMode",
         "hooks": [
           {
             "type": "command",
@@ -11,9 +11,7 @@
             "timeout": 30
           }
         ]
-      }
-    ],
-    "PostToolUse": [
+      },
       {
         "matcher": "Write|Edit",
         "hooks": [

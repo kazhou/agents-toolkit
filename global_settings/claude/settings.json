@@ -3,9 +3,6 @@
     "commit": "",
     "pr": ""
   },
-  "permissions": {
-    "defaultMode": "plan"
-  },
   "hooks": {
     "Notification": [
       {

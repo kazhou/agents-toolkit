@@ -16,11 +16,6 @@ local_settings/
     hooks/
       save-transcript.sh ← auto-save session transcripts on session end
   agent_dev/             ← development workflow structure (see ../README.md)
-    agent_docs/          ← optional guidelines to include in CLAUDE.md per project need (gitignored)
-  notebooks/
-    CLAUDE.md            ← notebook-specific agent guidelines
-  tests/
-    CLAUDE.md            ← test-specific agent guidelines
 ```
 
 ## Setup

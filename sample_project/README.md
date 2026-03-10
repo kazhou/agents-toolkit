@@ -10,7 +10,6 @@ Test project for experimenting with the agents-toolkit workflow.
 ## Directories
 
 - `agent_dev/` — workflow docs, drafts, and session logs
-- `plans/` — implementation plans
 
 ## Usage
 

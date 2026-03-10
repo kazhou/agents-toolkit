@@ -97,6 +97,10 @@ update_project() {
     # 5. .gitignore patterns
     local gitignore="$target/.gitignore"
     touch "$gitignore"
+    # Ensure file ends with a newline before appending
+    if [[ -s "$gitignore" ]] && [[ "$(tail -c 1 "$gitignore")" != "" ]]; then
+        echo "" >> "$gitignore"
+    fi
     local gi_added=0
     for pattern in "agent_dev/transcripts/" "agent_dev/archived/" "agent_dev/drafting/" "agent_dev/agent_docs/"; do
         if ! grep -qF "$pattern" "$gitignore" 2>/dev/null; then

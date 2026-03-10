@@ -41,6 +41,11 @@ echo "Updating .gitignore..."
 GITIGNORE="$TARGET/.gitignore"
 touch "$GITIGNORE"
 
+# Ensure file ends with a newline before appending
+if [[ -s "$GITIGNORE" ]] && [[ "$(tail -c 1 "$GITIGNORE")" != "" ]]; then
+    echo "" >> "$GITIGNORE"
+fi
+
 # Only append if not already present
 for pattern in "agent_dev/transcripts/" "agent_dev/archived/" "agent_dev/drafting/" "agent_dev/agent_docs/"; do
     if ! grep -qF "$pattern" "$GITIGNORE" 2>/dev/null; then

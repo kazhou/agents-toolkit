@@ -83,6 +83,8 @@ agent_dev/
 | `/jupyter-notebook` | Execute | Guidelines for Jupyter notebook workflows |
 | `/plotting` | Execute | Guidelines for plotting and visualization |
 
+Skills marked with \* are adapted from [superpowers](https://github.com/anthropics/claude-plugins-official) v5.0.0: `/brainstorm` (from `brainstorming`), `/debug` (from `systematic-debugging`).
+
 ### Codex MCP Server
 
 The global settings include a [Codex CLI](https://developers.openai.com/codex/cli/) MCP server, letting Claude Code call Codex for co-brainstorming, co-planning, or independent code review.

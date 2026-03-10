@@ -12,7 +12,7 @@ global_settings/         ← shared across all projects
   cc_update_global.sh    ← pull toolkit updates into ~/.claude/
   claude/                ← copy into ~/.claude/
     settings.json        ← global Claude Code settings
-    skills/              ← global skills (/handoff, /review-insights, /update-docs, /update-claudes)
+    skills/              ← global skills (/brainstorm, /debug, /audit-plan, /sync-docs, /handoff, /review-insights, /data-analysis, /jupyter-notebook, /plotting)
   codex/
     codex_prompt.json    ← Codex agent prompt config
 
@@ -25,24 +25,22 @@ local_settings/          ← per-project template
     hooks/
       save-transcript.sh ← auto-save session transcripts
   agent_dev/             ← development workflow structure (see below)
-  notebooks/             ← notebook-specific agent guidelines
-  tests/                 ← test-specific agent guidelines
 ```
 
 ---
 
 ## Workflow
 
-- **Brainstorm** — explore the WHAT and WHY. User + CC whiteboard freely in `drafting/` docs (`draft.sh [name]` to create). No code, only frameworks, trade-offs, and decisions. A single brainstorm may produce multiple active plans.
+- **Brainstorm** (`/brainstorm`) — explore the WHAT and WHY. User + CC whiteboard freely in `drafting/` docs (`draft.sh [name]` to create). No code, only frameworks, trade-offs, and decisions. On approval, creates active doc and transitions to Plan Mode. A single brainstorm may produce multiple active plans.
   - Surface broader goals/decisions to `agent_dev/README.md # Insights`
 - **Plan** — turn a solid draft into one or more active plans in `active/`. Each active plan covers a single shippable scope — if something can ship independently, it gets its own plan. Tasks are tagged for parallelism (`[parallel]`, `[depends: X]`) and scoped to specific files/dirs. Plans include boundaries (what not to touch) and a blocked section for unresolved questions.
   - CC enters Plan Mode based on these finalized docs
   - Claude Code plans saved in `proj/.claude/plans`
   - Transcripts auto-copied to `agent_dev/transcripts/` on ExitPlanMode
-- **Execute** — agents work off the plan. Parallel tasks run in separate worktrees for isolation. When an agent hits ambiguity, it documents the question in `# Blocked` and moves on to other tasks instead of guessing or stalling.
+- **Execute** — run `/audit-plan` before first code edit. Agents work off the plan. Parallel tasks run in separate worktrees for isolation. When an agent hits ambiguity, it documents the question in `# Blocked` and moves on to other tasks instead of guessing or stalling.
   - **Handoff** — `/handoff` when context runs low. Checks off completed todos, summarizes remaining work. Can also be triggered as a manual pre-compaction by user.
-- **Complete** — one PR per active plan. Agent writes the PR description (what was built, key decisions, what was not touched). Agent updates `agent_dev/LOG.md`.
-  - **Review** — `/review-insights` surfaces `# Insights` across CLAUDE.md files. Completed active docs moved to `archived/`.
+- **Complete** — one PR per active plan. Agent writes the PR description (what was built, key decisions, what was not touched). Run `/sync-docs` to update READMEs and CLAUDE.md files, archive completed plans. Agent updates `agent_dev/LOG.md`.
+  - **Review** — `/review-insights` surfaces `# Insights` across CLAUDE.md files.
 
 ```
 agent_dev/
@@ -50,7 +48,6 @@ agent_dev/
   CLAUDE.md              ← workflow instructions (machine-readable task format)
   LOG.md                 ← agent summaries after task completion
   draft.sh               ← create drafting docs from terminal
-  agent_docs/            ← optional guidelines (gitignored, include in CLAUDE.md per project need)
   drafting/
     YY-MM-DD_{name}.md
   active/
@@ -63,7 +60,9 @@ agent_dev/
 ### Automation
 
 **Hooks**
-- `save-transcript.sh` — copies + cleans session transcript to `agent_dev/transcripts/` on session end
+- `save-transcript.sh` — copies + cleans session transcript to `agent_dev/transcripts/` on ExitPlanMode
+- **`/audit-plan` reminder** — on ExitPlanMode, reminds agent to run `/audit-plan` before coding
+- **`/handoff` reminder** — on PreCompact, reminds agent to run `/handoff` before context compaction
 - **Python format+lint** — runs `ruff format` + `ruff check --fix` on `.py` files after Write/Edit (via `uv run`)
 - **JS/TS format** — runs `prettier --write` on `.js/.ts/.jsx/.tsx` files after Write/Edit
 - **JS/TS lint** — runs `eslint --fix` on `.js/.ts/.jsx/.tsx` files after Write/Edit
@@ -72,12 +71,17 @@ agent_dev/
 
 **Skills** (global — `~/.claude/skills/`)
 
-| Skill | Description |
-|-------|-------------|
-| `/handoff [active-doc]` | Manual pre-compaction. Check off completed todos, summarize remaining in Plan Mode, prompt user to `/clear` |
-| `/review-insights` | Scan all CLAUDE.md + agent_dev/README.md `# Insights` sections for review |
-| `/update-docs [path]` | Recursively update all README.md files to reflect current codebase state |
-| `/update-claudes [path]` | Recursively update all CLAUDE.md files for accuracy (preserves `# Insights`) |
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| `/brainstorm` | Brainstorm | Before features/behavior changes — explore intent, propose approaches, get approval |
+| `/audit-plan` | Plan → Execute | After Plan Mode, before coding — scope check + simplicity audit |
+| `/debug` | Execute | On bugs, test failures, unexpected behavior — systematic root cause analysis |
+| `/handoff [active-doc]` | Execute | Manual pre-compaction — check off completed todos, summarize remaining |
+| `/sync-docs [path]` | Complete | Update all README.md and CLAUDE.md files, archive completed plans |
+| `/review-insights` | Review | Scan all `# Insights` sections for review |
+| `/data-analysis` | Execute | Guidelines for data analysis workflows |
+| `/jupyter-notebook` | Execute | Guidelines for Jupyter notebook workflows |
+| `/plotting` | Execute | Guidelines for plotting and visualization |
 
 ### Codex MCP Server
 

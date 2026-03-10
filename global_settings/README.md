@@ -11,10 +11,15 @@ global_settings/
   claude/
     settings.json        ← global Claude Code settings
     skills/              ← global skills
+      brainstorm/        ← /brainstorm
+      debug/             ← /debug
+      audit-plan/        ← /audit-plan
+      sync-docs/         ← /sync-docs
       handoff/           ← /handoff [active-doc]
       review-insights/   ← /review-insights
-      update-docs/       ← /update-docs [path]
-      update-claudes/    ← /update-claudes [path]
+      data-analysis/     ← /data-analysis
+      jupyter-notebook/  ← /jupyter-notebook
+      plotting/          ← /plotting
   codex/
     codex_prompt.json    ← Codex system prompt saved for future reference, not related to setup
 ```

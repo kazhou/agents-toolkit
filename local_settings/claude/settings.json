@@ -1,6 +1,18 @@
 {
+  "autoMemoryEnabled": true,
   "plansDirectory": ".claude/plans",
   "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'REMINDER: Run /handoff before compaction to preserve progress.'"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "ExitPlanMode",
@@ -9,6 +21,10 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/save-transcript.sh",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "echo 'REMINDER: Run /audit-plan before writing any code.'"
           }
         ]
       },

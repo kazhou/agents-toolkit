@@ -10,8 +10,10 @@
     - `scope:` per task — dirs/files this task is allowed to touch
   - Active plans must include: `# Boundaries` (plan-level do-not-touch), `# Tasks`, `# Blocked`, `# Plans`
 - **Execute** — CC works off the plan, TDD, frequent commits. Update `LOG.md`
+  - Before first code edit, run `/audit-plan`. If flagged items exist, resolve or get user waiver before proceeding.
   - Parallel agents: each gets its own worktree, scoped to task's `scope:` line. Never run parallel agents on the same working directory.
   - If two tasks would edit overlapping files, they can't be `[parallel]` — sequence them with `[depends:]`.
+  - Parallel autonomous agents do not brainstorm. They consume scoped tasks from `active/`, execute within `scope:`, and escalate ambiguity to `# Blocked`.
   - After parallel agents complete, merge worktrees sequentially.
   - When blocked mid-task: append question + context to active plan's `# Blocked`, skip that task, continue with others.
   - At session start: check `# Blocked` for items resolved since last session.
